@@ -8,7 +8,7 @@ Guidance for Claude (and any human contributor) working in this repository. Read
 
 - Source of truth: `docs/PRD.md` (v0.1, written 21 Sep 2026). If code and PRD disagree, stop, say so, and either fix the code or update the PRD on purpose in the same change. Never let them drift silently.
 - Day-by-day breakdown: `docs/specs/day-N-spec.md` filters the PRD down to exactly what day N covers (requirement IDs, tests, exit criteria); `docs/plans/day-N-plan.md` is the ordered, file-level implementation checklist for that spec. Both exist for Day 1 through Day 7, mirroring PRD section 13. They are an index into the PRD, not a replacement for it.
-- Status: pre-implementation. Only `docs/PRD.md`, `docs/specs/`, `docs/plans/`, this file and `job_description_frontier.jpeg` (reference material, leave it where it is) exist — no source code yet. Update this section as milestones land.
+- Status: Day 1 implementation done, CI not yet confirmed green (see §12). `ssim_core` (Result, Clock, BoundedQueue, EventBus, Logger, Config — 29 tests) and `ssim_hw` (IStage/ILaserSensor/ILoadPort, WaferModel, StageSim, LaserSensorSim, FaultInjector, hardware factory — 21 tests) exist and build warning-free with the forward-model half of UT-STONEY-1 passing. Not yet built: scan thread, processing pipeline, controller state machine, alarms wiring, CLI, Qt, SECS/GEM (Day 2+ per docs/specs/day-1-spec.md).
 - Owner: Md. Habibur Rahman (Habib), a CSE graduate applying for the Software Engineer role at Frontier Semiconductor Bangladesh Ltd. Application deadline: 28 Sep 2026. Target submit date: 27 Sep 2026.
 - Working style with Habib: explain the concept in plain language before showing commands or code; keep prose conversational and free of jargon where possible; no emojis; say clearly what was verified and what was assumed.
 
@@ -324,7 +324,7 @@ Mac limits to remember: no Valgrind or GDB on Apple Silicon (use ASan, Instrumen
 
 | Day | Date | Target | Status |
 |---|---|---|---|
-| D1 | Mon 21 Sep | Skeleton, CI on three systems, core basics, wafer model and simulated hardware, scope frozen | not started |
+| D1 | Mon 21 Sep | Skeleton, CI on three systems, core basics, wafer model and simulated hardware, scope frozen | code done, CI not yet confirmed green |
 | D2 | Tue 22 Sep | Scan, processing, controller, alarms, exports, CLI; tag v0.1 | not started |
 | D3 | Wed 23 Sep | Qt panel, wafer map, control modes; README draft | not started |
 | D4 | Thu 24 Sep | SECS-II codec, fuzz tests, HSMS framing and timers | not started |

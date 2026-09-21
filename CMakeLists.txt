@@ -17,8 +17,14 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(Warnings)
 include(Sanitizers)
 
+# nlohmann_json is needed by ssim_core itself (Config), independent of
+# whether tests are built.
+include(FetchContentPins)
+
+add_subdirectory(src/core)
+add_subdirectory(src/hw)
+
 if(SSIM_BUILD_TESTS)
-    include(FetchContentPins)
     enable_testing()
     add_subdirectory(tests)
 endif()
