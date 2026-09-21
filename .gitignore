@@ -1,0 +1,23 @@
+# Build outputs (CMakePresets.json puts each variant in its own directory)
+build/
+build-*/
+out/
+
+# Generated at runtime, never hand-authored
+results/
+
+# CMake local overrides (machine-specific, never shared)
+CMakeUserPresets.json
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reference material only (CLAUDE.md §2: no Frontier/FSM names, logos or
+# proprietary material in the repo) — kept locally, never pushed.
+job_description_frontier.jpeg

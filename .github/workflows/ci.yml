@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            cc: clang
+            cxx: clang++
+          - os: ubuntu-latest
+            cc: gcc
+            cxx: g++
+          - os: windows-latest
+            # No CC/CXX override: the default CMake generator on Windows is
+            # Visual Studio (multi-config), which drives MSVC via MSBuild and
+            # does not need cl.exe on PATH the way Makefiles/Ninja would.
+            cc: ""
+            cxx: ""
+    runs-on: ${{ matrix.os }}
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (dev preset)
+        run: cmake --preset dev
+
+      - name: Build
+        run: cmake --build build --config Debug -j
+
+      - name: Test
+        run: ctest --test-dir build -C Debug --output-on-failure
+
+  clang-format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: sudo apt-get update && sudo apt-get install -y clang-format
+
+      - name: Check formatting
+        run: |
+          files=$(git ls-files '*.cpp' '*.hpp' '*.cc' '*.h')
+          if [ -n "$files" ]; then
+            clang-format --dry-run --Werror $files
+          fi
