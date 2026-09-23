@@ -21,3 +21,16 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
     GIT_TAG asio-1-30-2
 )
+
+# Needed by ssim_analysis's PNG writer (FR-OUT-3). stb is header-only and
+# untagged (no SemVer releases), so this pins an exact commit instead of a
+# tag; it has no CMakeLists.txt, so FetchContent_MakeAvailable only
+# populates it (see CMake docs: add_subdirectory only runs when the
+# populated source has a CMakeLists.txt) — src/analysis/CMakeLists.txt adds
+# ${stb_SOURCE_DIR} as an include directory directly.
+FetchContent_Declare(
+    stb
+    GIT_REPOSITORY https://github.com/nothings/stb.git
+    GIT_TAG 2c980bb59875b0d32144a71867fbdebb2f77cd20
+)
+FetchContent_MakeAvailable(stb)

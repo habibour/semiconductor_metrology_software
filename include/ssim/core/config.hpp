@@ -61,11 +61,20 @@ struct NoiseConfig {
     double sigma_um = 0.5;
 };
 
+// PRD §8.1's illustrative JSON only shows wafer/type/rate/amplitude_um; the
+// remaining fields are a documented extension so a FaultConfig carries
+// everything ssim::hw::FaultSpec needs (burst/dropout length, drift rate,
+// saturation limit, stall duration) without the scan thread inventing
+// defaults out of thin air. Defaults mirror FaultSpec's own defaults.
 struct FaultConfig {
     std::string wafer;
     std::string type;
     double rate = 0.0;
     double amplitude_um = 0.0;
+    int length_samples = 1;
+    double drift_um_per_s = 0.0;
+    double saturation_limit_um = 0.0;
+    double stall_duration_s = 0.0;
 };
 
 struct AnalysisConfig {

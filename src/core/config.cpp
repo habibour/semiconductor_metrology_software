@@ -215,13 +215,20 @@ Result<ConfigLoadResult> load_config_from_json(const nlohmann::json& raw) {
                     {kConfigErrorExitCode, "faults must be an array"});
             }
             for (const auto& item : f) {
-                check_unknown_keys(item, "faults[]", {"wafer", "type", "rate", "amplitude_um"},
+                check_unknown_keys(item, "faults[]",
+                                   {"wafer", "type", "rate", "amplitude_um", "length_samples",
+                                    "drift_um_per_s", "saturation_limit_um", "stall_duration_s"},
                                    warnings);
                 FaultConfig fc;
                 fc.wafer = get_or(item, "wafer", fc.wafer);
                 fc.type = get_or(item, "type", fc.type);
                 fc.rate = get_or(item, "rate", fc.rate);
                 fc.amplitude_um = get_or(item, "amplitude_um", fc.amplitude_um);
+                fc.length_samples = get_or(item, "length_samples", fc.length_samples);
+                fc.drift_um_per_s = get_or(item, "drift_um_per_s", fc.drift_um_per_s);
+                fc.saturation_limit_um =
+                    get_or(item, "saturation_limit_um", fc.saturation_limit_um);
+                fc.stall_duration_s = get_or(item, "stall_duration_s", fc.stall_duration_s);
                 cfg.faults.push_back(std::move(fc));
             }
         }

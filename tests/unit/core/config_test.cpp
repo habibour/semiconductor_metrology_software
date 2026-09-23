@@ -129,6 +129,28 @@ TEST(Config, UnsupportedWaferDiameterAborts) {
     EXPECT_EQ(result.error().code, kConfigErrorExitCode);
 }
 
+TEST(Config, FaultConfigParsesExtendedFields) {
+    auto raw = valid_config_json();
+    raw["faults"] = nlohmann::json::array({{{"wafer", "W005"},
+                                            {"type", "burst"},
+                                            {"rate", 0.01},
+                                            {"amplitude_um", 40},
+                                            {"length_samples", 5},
+                                            {"drift_um_per_s", 0.2},
+                                            {"saturation_limit_um", 100.0},
+                                            {"stall_duration_s", 1.5}}});
+
+    auto result = load_config_from_json(raw);
+
+    ASSERT_TRUE(result);
+    ASSERT_EQ(result.value().config.faults.size(), 1u);
+    const FaultConfig& fc = result.value().config.faults[0];
+    EXPECT_EQ(fc.length_samples, 5);
+    EXPECT_DOUBLE_EQ(fc.drift_um_per_s, 0.2);
+    EXPECT_DOUBLE_EQ(fc.saturation_limit_um, 100.0);
+    EXPECT_DOUBLE_EQ(fc.stall_duration_s, 1.5);
+}
+
 TEST(Config, UnknownKeyWarnsButDoesNotAbort) {
     auto raw = valid_config_json();
     raw["scan"]["totally_unknown_field"] = 1;

@@ -1,0 +1,36 @@
+{
+  "machine": { "model": "SSIM-128", "softrev": "0.1.0" },
+  "wafer": {
+    "diameter_mm": 300,
+    "thickness_um": 775,
+    "film_thickness_um": 1.0,
+    "biaxial_modulus_gpa": 180.5,
+    "truth": {
+      "stress_mpa": -180.0,
+      "initial_curvature_1_per_m": 0.002,
+      "tilt_x_um_per_mm": 0.8,
+      "tilt_y_um_per_mm": -0.3,
+      "anisotropy": 0.05
+    },
+    "seed": 12345
+  },
+  "scan": {
+    "lines": 6, "points_per_mm": 40, "speed_mm_per_s": 150,
+    "realtime_factor": 1.0, "edge_exclusion_mm": 3.0
+  },
+  "noise": { "sigma_um": 0.5 },
+  "faults": [],
+  "analysis": {
+    "outlier_mad_k": 6.0, "outlier_fraction_alarm": 0.01, "fit_rms_limit_um": 2.0,
+    "stress_spec_mpa": [-400, 400], "stress_plausible_mpa": [-5000, 5000],
+    "map_grid_mm": 1.0, "threads": 0
+  },
+  "cassette": { "id": "C001", "slots": 25 },
+  "comm": {
+    "enabled": true, "bind": "127.0.0.1", "port": 5000, "device_id": 0,
+    "allow_host_online": true,
+    "t3_s": 45, "t5_s": 10, "t6_s": 5, "t7_s": 10, "t8_s": 5, "linktest_s": 60,
+    "max_frame_bytes": 1048576
+  },
+  "output": { "dir": "results", "save_samples": true, "sample_decimation": 10 }
+}
