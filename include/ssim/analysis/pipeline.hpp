@@ -31,7 +31,12 @@ struct PipelineResult {
     double stress_pa = 0.0;
     double stress_unc_pa = 0.0;
     double max_fit_rms_m = 0.0;
-    double removed_fraction_overall = 0.0;
+    double removed_fraction_overall = 0.0;  // all causes: edge + outlier + dropout
+    // PRD §8.4 step 4's SensorSpikeRateHigh gate: only outlier-rejection
+    // removals, not edge exclusion (which removes a fixed ~edge_exclusion_mm
+    // slice every run regardless of sensor health, so it would otherwise
+    // false-trigger the alarm on every single scan).
+    double outlier_removed_fraction = 0.0;
     bool any_dropout = false;
     QualityGateResult quality;
     WaferMap map;

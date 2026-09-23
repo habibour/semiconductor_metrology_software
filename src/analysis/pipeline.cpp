@@ -21,6 +21,7 @@ PipelineResult run_pipeline(const std::vector<ssim::core::SampleBlock>& lines,
 
     std::size_t total_samples = 0;
     std::size_t total_removed = 0;
+    std::size_t total_outliers = 0;
     for (const auto& block : lines) {
         LineSamples raw{block.angle_rad, block.positions_m, block.heights_m};
         FilterResult filtered = apply_edge_exclusion(raw, config.scan.edge_exclusion_mm);
@@ -29,7 +30,8 @@ PipelineResult run_pipeline(const std::vector<ssim::core::SampleBlock>& lines,
         for (const auto& s : filtered.samples) {
             if (s.flag == SampleFlag::kDropped) {
                 result.any_dropout = true;
-                break;
+            } else if (s.flag == SampleFlag::kOutlier) {
+                ++total_outliers;
             }
         }
         total_samples += filtered.samples.size();
@@ -38,6 +40,9 @@ PipelineResult run_pipeline(const std::vector<ssim::core::SampleBlock>& lines,
     }
     result.removed_fraction_overall =
         total_samples > 0 ? static_cast<double>(total_removed) / static_cast<double>(total_samples)
+                          : 0.0;
+    result.outlier_removed_fraction =
+        total_samples > 0 ? static_cast<double>(total_outliers) / static_cast<double>(total_samples)
                           : 0.0;
 
     result.line_fits = pool.fit_lines(result.filtered_lines);

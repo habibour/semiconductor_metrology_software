@@ -23,34 +23,46 @@ double median(std::vector<double> values) {
 }
 }  // namespace
 
-FilterResult apply_outlier_rejection(const FilterResult& input, double mad_k) {
+FilterResult apply_outlier_rejection(const FilterResult& input, double mad_k,
+                                     int window_radius_samples) {
     FilterResult result = input;
 
-    std::vector<double> kept_z;
-    for (const auto& s : result.samples) {
-        if (s.flag == SampleFlag::kKept) {
-            kept_z.push_back(s.z_m);
+    std::vector<std::size_t> kept_indices;
+    for (std::size_t i = 0; i < result.samples.size(); ++i) {
+        if (result.samples[i].flag == SampleFlag::kKept) {
+            kept_indices.push_back(i);
         }
     }
-    if (kept_z.size() < 2) {
-        return result;  // not enough points for a meaningful median/MAD
+    const std::size_t n = kept_indices.size();
+    if (n < 2) {
+        return result;
     }
+    const std::size_t radius = static_cast<std::size_t>(std::max(1, window_radius_samples));
 
-    const double med = median(kept_z);
-    std::vector<double> abs_dev;
-    abs_dev.reserve(kept_z.size());
-    for (double z : kept_z) {
-        abs_dev.push_back(std::abs(z - med));
-    }
-    const double mad = median(abs_dev);
+    for (std::size_t k = 0; k < n; ++k) {
+        const std::size_t lo = (k > radius) ? (k - radius) : 0;
+        const std::size_t hi = std::min(n - 1, k + radius);
 
-    // PRD §8.4 step 3, literal threshold: "exceeds k times the median
-    // absolute deviation" — no distribution-normalizing scale factor.
-    const double threshold = mad_k * mad;
-    if (threshold > 0.0) {
-        for (auto& s : result.samples) {
-            if (s.flag == SampleFlag::kKept && std::abs(s.z_m - med) > threshold) {
-                s.flag = SampleFlag::kOutlier;
+        std::vector<double> window_z;
+        window_z.reserve(hi - lo + 1);
+        for (std::size_t w = lo; w <= hi; ++w) {
+            window_z.push_back(result.samples[kept_indices[w]].z_m);
+        }
+        const double med = median(window_z);
+        std::vector<double> abs_dev;
+        abs_dev.reserve(window_z.size());
+        for (double z : window_z) {
+            abs_dev.push_back(std::abs(z - med));
+        }
+        const double mad = median(abs_dev);
+
+        // PRD §8.4 step 3, literal threshold: "exceeds k times the median
+        // absolute deviation" — no distribution-normalizing scale factor.
+        const double threshold = mad_k * mad;
+        if (threshold > 0.0) {
+            const double zi = result.samples[kept_indices[k]].z_m;
+            if (std::abs(zi - med) > threshold) {
+                result.samples[kept_indices[k]].flag = SampleFlag::kOutlier;
             }
         }
     }
