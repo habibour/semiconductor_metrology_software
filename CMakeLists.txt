@@ -24,6 +24,7 @@ include(FetchContentPins)
 add_subdirectory(src/core)
 add_subdirectory(src/hw)
 add_subdirectory(src/analysis)
+add_subdirectory(src/app_cli)
 
 if(SSIM_BUILD_TESTS)
     enable_testing()

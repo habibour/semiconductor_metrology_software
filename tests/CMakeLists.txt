@@ -37,3 +37,15 @@ ssim_add_unit_test(ssim_analysis_quality_gates_test SOURCES unit/analysis/qualit
 ssim_add_unit_test(ssim_analysis_wafer_map_test SOURCES unit/analysis/wafer_map_test.cpp LIBS ssim_analysis)
 ssim_add_unit_test(ssim_analysis_fit_pool_test SOURCES unit/analysis/fit_pool_test.cpp LIBS ssim_analysis)
 ssim_add_unit_test(ssim_analysis_writers_test SOURCES unit/analysis/writers_test.cpp LIBS ssim_analysis)
+
+# Integration test: invokes the real equipment_cli binary as a subprocess
+# (FR-CLI-1/3), so it needs the binary's path baked in rather than linking
+# against it.
+add_executable(ssim_cli_demo_test integration/cli_demo_test.cpp)
+target_link_libraries(ssim_cli_demo_test PRIVATE GTest::gtest_main nlohmann_json::nlohmann_json)
+target_compile_definitions(ssim_cli_demo_test PRIVATE
+    EQUIPMENT_CLI_PATH="$<TARGET_FILE:equipment_cli>")
+add_dependencies(ssim_cli_demo_test equipment_cli)
+ssim_apply_warnings(ssim_cli_demo_test)
+ssim_apply_sanitizers(ssim_cli_demo_test)
+gtest_discover_tests(ssim_cli_demo_test)
