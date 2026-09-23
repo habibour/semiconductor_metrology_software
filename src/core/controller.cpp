@@ -194,6 +194,11 @@ void Controller::notify_fault(AlarmId id, std::string reason) {
     });
 }
 
+void Controller::notify_stage_stopped() {
+    (void)run_on_controller_thread(
+        [this]() -> Result<ProcessState> { return transition(ProcessTrigger::kStageStopped, {}); });
+}
+
 std::string Controller::current_wafer_id() const {
     std::lock_guard lock(wafer_id_mutex_);
     return current_wafer_id_;

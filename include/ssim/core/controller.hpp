@@ -84,6 +84,13 @@ public:
     // recorded/published via AlarmManager regardless.
     void notify_fault(AlarmId id, std::string reason);
 
+    // PRD §6.5 "Stage stopped": posted by the scan driver's own background
+    // thread right before it exits, after an abort. Legal only from
+    // Stopping; a stray call while not in Stopping (e.g. a raw teardown
+    // that never went through AbortCommand first) is silently rejected by
+    // the FSM rather than corrupting state.
+    void notify_stage_stopped();
+
     ProcessState state() const { return state_.load(); }
     ControlMode control_mode() const { return control_mode_.load(); }
     bool has_active_alarm() const { return has_active_alarm_.load(); }

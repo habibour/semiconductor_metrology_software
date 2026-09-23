@@ -2,6 +2,7 @@ add_library(ssim_hw STATIC
     fault_injector.cpp
     hardware_factory.cpp
     laser_sensor_sim.cpp
+    scan_thread.cpp
     stage_sim.cpp
     wafer_model.cpp
 )
