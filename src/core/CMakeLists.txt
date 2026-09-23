@@ -4,6 +4,10 @@ add_library(ssim_core STATIC
     config.cpp
     event_bus.cpp
     logger.cpp
+    process_state_machine.cpp
+    command.cpp
+    alarms.cpp
+    controller.cpp
 )
 
 target_include_directories(ssim_core PUBLIC
