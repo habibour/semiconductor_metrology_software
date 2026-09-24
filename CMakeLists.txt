@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Tier-1-only build by default: neither Qt nor SECS/GEM exists yet.
+# Qt and SECS/GEM are both opt-in: the headless machine builds without them.
 option(SSIM_ENABLE_SECSGEM "Build the SECS/GEM module (ssim_secsgem, host_sim)" OFF)
 option(SSIM_BUILD_QT "Build the Qt operator panel (equipment_qt)" OFF)
 option(SSIM_BUILD_TESTS "Build unit/integration/scenario tests" ON)
@@ -24,6 +24,7 @@ include(FetchContentPins)
 add_subdirectory(src/core)
 add_subdirectory(src/hw)
 add_subdirectory(src/analysis)
+add_subdirectory(src/machine)
 add_subdirectory(src/app_cli)
 
 if(SSIM_BUILD_TESTS)
