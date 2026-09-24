@@ -50,7 +50,7 @@ target_compile_definitions(ssim_cli_demo_test PRIVATE
 add_dependencies(ssim_cli_demo_test equipment_cli)
 ssim_apply_warnings(ssim_cli_demo_test)
 ssim_apply_sanitizers(ssim_cli_demo_test)
-gtest_discover_tests(ssim_cli_demo_test)
+gtest_discover_tests(ssim_cli_demo_test DISCOVERY_TIMEOUT 60)
 
 ssim_add_unit_test(ssim_machine_runtime_test SOURCES integration/machine_runtime_test.cpp LIBS ssim_machine)
 

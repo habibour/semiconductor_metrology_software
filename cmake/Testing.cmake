@@ -7,5 +7,8 @@ function(ssim_add_unit_test name)
     target_link_libraries(${name} PRIVATE GTest::gtest_main ${ARG_LIBS})
     ssim_apply_warnings(${name})
     ssim_apply_sanitizers(${name})
-    gtest_discover_tests(${name})
+    # Discovery runs the freshly built test binary after linking. The default
+    # 5 s limit fails the whole build when the machine is busy compiling many
+    # tests in parallel, so it is raised.
+    gtest_discover_tests(${name} DISCOVERY_TIMEOUT 60)
 endfunction()
