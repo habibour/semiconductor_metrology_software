@@ -10,6 +10,9 @@ add_library(ssim_secsgem STATIC
     secs2/message_factory.cpp
     hsms/frame.cpp
     hsms/frame_decoder.cpp
+    hsms/connection_state.cpp
+    hsms/data_message.cpp
+    hsms/session.cpp
 )
 
 target_include_directories(ssim_secsgem PUBLIC
