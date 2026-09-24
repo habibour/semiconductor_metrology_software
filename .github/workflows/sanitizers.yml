@@ -1,0 +1,52 @@
+name: Sanitizers
+
+# CLAUDE.md §7 / §10: ThreadSanitizer and AddressSanitizer+UBSan are separate
+# builds (thread and address cannot be combined) and must stay clean. They run
+# on Ubuntu because the sanitizer runtimes do not work reliably on every
+# developer machine.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  address-undefined:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (ASan + UBSan)
+        run: >
+          cmake --preset asan
+          -DSSIM_SANITIZER=address,undefined
+          -DSSIM_ENABLE_SECSGEM=ON
+
+      - name: Build
+        run: cmake --build build-asan -j
+
+      - name: Test
+        env:
+          ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+        run: ctest --test-dir build-asan --output-on-failure
+
+  thread:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Newer kernels use more address-space randomisation than TSan supports
+      # ("unexpected memory mapping"); lowering it is the documented workaround.
+      - name: Lower ASLR entropy for TSan
+        run: sudo sysctl vm.mmap_rnd_bits=28
+
+      - name: Configure (TSan)
+        run: cmake --preset tsan -DSSIM_ENABLE_SECSGEM=ON
+
+      - name: Build
+        run: cmake --build build-tsan -j
+
+      - name: Test
+        env:
+          TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
+        run: ctest --test-dir build-tsan --output-on-failure

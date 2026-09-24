@@ -38,6 +38,23 @@ jobs:
       - name: Test
         run: ctest --test-dir build -C Debug --output-on-failure
 
+  # FR-MC-3: the machine must build, pass its tests and run without the
+  # SECS/GEM module. The dev preset builds it (SSIM_ENABLE_SECSGEM=ON), so this
+  # job keeps proving the OFF configuration.
+  build-without-secsgem:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (SECS/GEM off)
+        run: cmake -S . -B build-off -DCMAKE_BUILD_TYPE=Debug -DSSIM_BUILD_TESTS=ON -DSSIM_ENABLE_SECSGEM=OFF
+
+      - name: Build
+        run: cmake --build build-off -j
+
+      - name: Test
+        run: ctest --test-dir build-off --output-on-failure
+
   clang-format-check:
     runs-on: ubuntu-latest
     steps:
