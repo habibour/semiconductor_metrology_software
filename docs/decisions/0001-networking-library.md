@@ -52,3 +52,11 @@ not assumed.
 - **Raw BSD sockets**: rejected — reinventing cross-platform timers and
   async I/O portably (especially IOCP on Windows) is out of scope for a
   portfolio project's time budget.
+
+## Update, 2026-09-24 (Day 4)
+
+Asio is now used by `ssim_secsgem`. It is fetched as the `asio-1-30-2` source
+tarball with a SHA-256 pin (`cmake/FetchContentPins.cmake`) instead of a git
+clone: same release, but a few megabytes instead of the whole repository, and
+a stricter pin. The verification gap noted above (Linux and Windows) is still
+open until CI has built the module on those systems.

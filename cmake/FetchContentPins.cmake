@@ -11,15 +11,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
-# Declared but not yet made available: no networking code exists before Day
-# 4 (ssim_secsgem), so nothing should force this download today. Q3 is
-# resolved (docs/decisions/0001-networking-library.md) — standalone Asio,
-# pinned here — but ssim_secsgem's own CMakeLists.txt is what will call
-# FetchContent_MakeAvailable(asio) once there is code to link it into.
+# Standalone Asio (docs/decisions/0001-networking-library.md). Fetched as the
+# tag's source tarball and pinned by SHA-256: a full git clone of this
+# repository is large and slow, and a hash pin is stricter than a tag. Made
+# available by src/secsgem/CMakeLists.txt, the only place that needs it.
 FetchContent_Declare(
     asio
-    GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
-    GIT_TAG asio-1-30-2
+    URL https://github.com/chriskohlhoff/asio/archive/refs/tags/asio-1-30-2.tar.gz
+    URL_HASH SHA256=755bd7f85a4b269c67ae0ea254907c078d408cce8e1a352ad2ed664d233780e8
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 
 # Needed by ssim_analysis's PNG writer (FR-OUT-3). stb is header-only and
