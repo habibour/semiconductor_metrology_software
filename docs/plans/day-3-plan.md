@@ -56,12 +56,12 @@ Read `docs/specs/day-3-spec.md` first. Builds on Day 2's controller/analysis/CLI
 
 ## Day 3 done-checklist (maps back to day-3-spec.md)
 
-- [ ] `MachineApi` facade exists and the Qt panel only talks through it.
+- [x] `MachineApi` facade exists and the Qt panel only talks through it.
 - [ ] Panel demonstrates: load config, switch control mode, Start/Stop/Abort,
       live progress + wafer map, alarm banner + clear — recorded as the "first
       GIF".
-- [ ] GUI thread confirmed non-blocking (no long call on the Qt thread) and
+- [x] GUI thread confirmed non-blocking (no long call on the Qt thread) and
       update rate ≤30 Hz.
-- [ ] README draft committed with real quickstart steps (no invented numbers).
-- [ ] Cassette loop done *or* explicitly deferred to Day 6 — either is a valid
+- [x] README draft committed with real quickstart steps (no invented numbers).
+- [x] Cassette loop done *or* explicitly deferred to Day 6 (deferred) — either is a valid
       outcome, silent scope creep into Day 4 is not.

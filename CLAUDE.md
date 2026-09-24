@@ -58,6 +58,7 @@ Hard constraints:
 | ssim_core | Config, units, clock, logging, queues, thread pool, event bus, command queue, machine controller, state machines | STL, JSON library |
 | ssim_hw | IStage, ILaserSensor, ILoadPort; simulated wafer model, simulated devices, fault injector, cassette simulator | ssim_core |
 | ssim_analysis | Edge exclusion, outlier rejection, curve fit, Stoney stress, uncertainty, wafer map, CSV/JSON/PNG writers | ssim_core (types only) |
+| ssim_machine | Reusable composition root (`MachineRuntime`): wires core, hardware and analysis for a machine that scans wafers back to back, on its own threads | ssim_core, ssim_hw, ssim_analysis |
 | ssim_secsgem | HSMS session and timers, SECS-II codec, message catalogue, GEM state models and handlers | ssim_core, Asio |
 | equipment_cli | Headless machine executable; demo and scenario modes | all of the above |
 | equipment_qt | Qt Widgets operator panel | all of the above, Qt |
@@ -264,7 +265,7 @@ Placement rules:
 xcode-select --install
 brew install cmake qt
 
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$(brew --prefix qt)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/opt/homebrew/opt/qtbase
 cmake --build build -j
 ctest --test-dir build --output-on-failure
 
@@ -326,7 +327,7 @@ Mac limits to remember: no Valgrind or GDB on Apple Silicon (use ASan, Instrumen
 |---|---|---|---|
 | D1 | Mon 21 Sep | Skeleton, CI on three systems, core basics, wafer model and simulated hardware, scope frozen | code done, CI not yet confirmed green |
 | D2 | Tue 22 Sep | Scan, processing, controller, alarms, exports, CLI; tag v0.1 | not started |
-| D3 | Wed 23 Sep | Qt panel, wafer map, control modes; README draft | not started |
+| D3 | Wed 23 Sep | Qt panel, wafer map, control modes; README draft | done Thu 24 Sep and committed locally, not pushed; first GIF not recorded, CI not confirmed, sanitizers not runnable on this Mac; cassette loop deferred to Day 6 |
 | D4 | Thu 24 Sep | SECS-II codec, fuzz tests, HSMS framing and timers | not started |
 | D5 | Fri 25 Sep | GEM module, host simulator, scenarios, interop; tag v0.2 | not started |
 | D6 | Sat 26 Sep | Refactor, sanitizer fixes, ring buffer and benchmarks, Octave check, Docker demo; tag v0.3 | not started |
