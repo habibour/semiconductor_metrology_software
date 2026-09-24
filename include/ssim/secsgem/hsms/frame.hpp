@@ -85,4 +85,8 @@ constexpr int kErrNotADataFrame = 403;  // to_message() on a control frame
 
 [[nodiscard]] ssim::core::Result<std::vector<std::uint8_t>> encode_frame(const Frame& frame);
 
+// The 10 header bytes on their own, as carried in the S9 error messages
+// (MHEAD/SHEAD, PRD 8.6.3).
+std::vector<std::uint8_t> header_bytes(const Header& header);
+
 }  // namespace ssim::secsgem::hsms

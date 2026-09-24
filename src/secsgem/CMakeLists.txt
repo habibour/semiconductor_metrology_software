@@ -17,6 +17,8 @@ add_library(ssim_secsgem STATIC
     hsms/data_message.cpp
     hsms/session.cpp
     hsms/server.cpp
+    gem/identifiers.cpp
+    gem/messages.cpp
 )
 
 target_include_directories(ssim_secsgem PUBLIC

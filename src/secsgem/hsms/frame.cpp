@@ -112,4 +112,16 @@ ssim::core::Result<std::vector<std::uint8_t>> encode_frame(const Frame& frame) {
     return R::ok(std::move(out));
 }
 
+std::vector<std::uint8_t> header_bytes(const Header& header) {
+    std::vector<std::uint8_t> out;
+    out.reserve(kHeaderSize);
+    put_be16(header.session_id, out);
+    out.push_back(header.byte2);
+    out.push_back(header.byte3);
+    out.push_back(header.ptype);
+    out.push_back(header.stype);
+    put_be32(header.system_bytes, out);
+    return out;
+}
+
 }  // namespace ssim::secsgem::hsms
