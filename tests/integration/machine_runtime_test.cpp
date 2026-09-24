@@ -1,6 +1,7 @@
 #include "ssim/machine/machine_runtime.hpp"
 
 #include <gtest/gtest.h>
+#include <unistd.h>
 
 #include <chrono>
 #include <cmath>
@@ -95,10 +96,9 @@ class MachineRuntimeTest : public ::testing::Test {
 protected:
     void SetUp() override {
         static int counter = 0;
-        root_ = std::filesystem::temp_directory_path() /
-                ("ssim_runtime_test_" +
-                 std::to_string(::testing::UnitTest::GetInstance()->random_seed()) + "_" +
-                 std::to_string(counter++));
+        root_ =
+            std::filesystem::temp_directory_path() /
+            ("ssim_runtime_test_" + std::to_string(::getpid()) + "_" + std::to_string(counter++));
         std::filesystem::remove_all(root_);
         config_.scan.realtime_factor = 0.0;
     }

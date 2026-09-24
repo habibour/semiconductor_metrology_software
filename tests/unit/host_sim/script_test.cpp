@@ -97,6 +97,28 @@ TEST(ScriptParse, ExpectWithAndWithoutPatternAndTimeout) {
     EXPECT_EQ(cmds[3].timeout, milliseconds(2000));
 }
 
+TEST(ScriptParse, WaitEventFilters) {
+    const auto cmds = parse_ok(
+        "wait-event 2005 WAFER_ID=W002\n"
+        "wait-event 2005 timeout=9s WAFER_ID=\"W3\" SLOT=1\n"
+        "wait-event 2004\n");
+    ASSERT_EQ(cmds.size(), 3u);
+    ASSERT_EQ(cmds[0].event_filters.size(), 1u);
+    EXPECT_EQ(cmds[0].event_filters[0].first, "WAFER_ID");
+    EXPECT_EQ(cmds[0].event_filters[0].second, "W002");
+    EXPECT_EQ(cmds[1].timeout, milliseconds(9000));
+    ASSERT_EQ(cmds[1].event_filters.size(), 2u);
+    EXPECT_EQ(cmds[1].event_filters[0].second, "W3");  // quotes are removed
+    EXPECT_EQ(cmds[1].event_filters[1].second, "1");
+    EXPECT_TRUE(cmds[2].event_filters.empty());
+}
+
+TEST(ScriptParse, WaitEventFilterErrors) {
+    EXPECT_NE(error_of("wait-event 2005 WAFER_ID\n").find("FIELD=VALUE"), std::string::npos);
+    EXPECT_NE(error_of("wait-event 2005 =W1\n").find("FIELD=VALUE"), std::string::npos);
+    EXPECT_NE(error_of("wait-event 2005 WAFER_ID=\n").find("FIELD=VALUE"), std::string::npos);
+}
+
 TEST(ScriptParse, ControlCommands) {
     const auto cmds = parse_ok(
         "select\nselect status=1\ndeselect\nlinktest\nseparate\nauto-ack off\nauto-ack on\nsleep "

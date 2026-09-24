@@ -11,7 +11,7 @@
 //   send S1F13 [nowait|W] [device=N] [ITEM]
 //   expect S1F14 [timeout=5s] [PATTERN]
 //   expect-no S6F11 [timeout=1s]
-//   wait-event CEID [timeout=5s]
+//   wait-event CEID [timeout=5s] [FIELD=VALUE ...]
 //   wait-alarm ALID set|clear [timeout=5s]
 //   expect-closed [timeout=5s]
 //   expect-status SVID [timeout=5s] PATTERN
@@ -28,6 +28,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "ssim/core/result.hpp"
@@ -75,7 +76,9 @@ struct Command {
     std::optional<ssim::secsgem::secs2::Item> body;  // send
     std::optional<Pattern> pattern;                  // expect / expect-status
     std::chrono::milliseconds timeout{5000};
-    std::uint32_t id = 0;   // wait-event CEID, wait-alarm ALID, expect-status SVID
+    std::uint32_t id = 0;  // wait-event CEID, wait-alarm ALID, expect-status SVID
+    // wait-event: the event must also carry these report fields with these values.
+    std::vector<std::pair<std::string, std::string>> event_filters;
     bool alarm_set = true;  // wait-alarm
     std::string field;      // assert: "event.STRESS_MPA", "alarm.ALID"
     AssertOp op = AssertOp::kEqual;

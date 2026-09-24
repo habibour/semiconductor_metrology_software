@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <deque>
 #include <optional>
 #include <thread>
@@ -61,6 +62,32 @@ std::optional<double> as_number(const secs2::Item& item) {
         default:
             return std::nullopt;
     }
+}
+
+// A field of an event, looked up by its name in the report layouts of PRD 8.6.5.
+std::optional<secs2::Item> find_event_field(const gem::EventReport& event,
+                                            const std::string& name) {
+    for (const gem::Report& report : event.reports) {
+        const auto& fields = gem::report_fields(report.rptid);
+        const auto it = std::find(fields.begin(), fields.end(), name);
+        if (it != fields.end()) {
+            const auto index = static_cast<std::size_t>(it - fields.begin());
+            if (index < report.values.size()) return report.values[index];
+            return std::nullopt;
+        }
+    }
+    return std::nullopt;
+}
+
+// True if the item is the given text (ASCII), number, or true/false.
+bool item_equals_text(const secs2::Item& item, const std::string& text) {
+    if (item.format() == secs2::Format::kAscii) return item.as_ascii() == text;
+    const std::optional<double> number = as_number(item);
+    if (!number) return false;
+    if (item.format() == secs2::Format::kBoolean) return (*number != 0.0) == (text == "true");
+    char* end = nullptr;
+    const double wanted = std::strtod(text.c_str(), &end);
+    return end != text.c_str() && *end == '\0' && std::fabs(*number - wanted) < 1e-9;
 }
 
 class Runner {
@@ -329,12 +356,17 @@ private:
     bool do_wait_event(const Command& c) {
         Received r;
         std::optional<gem::EventReport> parsed;
-        const std::string what = "event " + std::to_string(c.id) + " " + gem::ceid_name(c.id);
+        std::string what = "event " + std::to_string(c.id) + " " + gem::ceid_name(c.id);
+        for (const auto& [field, wanted] : c.event_filters) what += " " + field + "=" + wanted;
         if (!wait_message(
                 [&](const Received& x) {
                     if (x.message.stream != 6 || x.message.function != 11) return false;
                     auto e = gem::parse_s6f11(x.message);
                     if (!e || e.value().ceid != c.id) return false;
+                    for (const auto& [field, wanted] : c.event_filters) {
+                        const auto value = find_event_field(e.value(), field);
+                        if (!value || !item_equals_text(*value, wanted)) return false;
+                    }
                     parsed = e.value();
                     return true;
                 },
@@ -415,15 +447,7 @@ private:
             if (!last_event_)
                 return fail("no event yet: use wait-event before asserting on event.*");
             const std::string name = c.field.substr(6);
-            for (const gem::Report& report : last_event_->reports) {
-                const auto& fields = gem::report_fields(report.rptid);
-                const auto it = std::find(fields.begin(), fields.end(), name);
-                if (it != fields.end()) {
-                    const auto index = static_cast<std::size_t>(it - fields.begin());
-                    if (index < report.values.size()) value = report.values[index];
-                    break;
-                }
-            }
+            value = find_event_field(*last_event_, name);
             if (!value) return fail("the last event has no field " + name);
         } else {
             if (!last_alarm_)

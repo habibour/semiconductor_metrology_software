@@ -232,9 +232,22 @@ Result<std::vector<Command>> parse_script(std::string_view text,
             auto [id, after] = split_word(rest);
             if (!parse_uint(id, c.id)) return R::err(syntax(line_no, "wait-event needs a CEID"));
             auto left = take_options(after, opts, line_no);
-            if (!left || !trim(left.value()).empty())
-                return R::err(syntax(line_no, "bad wait-event options"));
+            if (!left) return R::err(left.error());
             if (opts.timeout) c.timeout = *opts.timeout;
+            // What remains are FIELD=VALUE filters, for example WAFER_ID=W002.
+            std::istringstream filters(left.value());
+            std::string word;
+            while (filters >> word) {
+                const std::size_t eq = word.find('=');
+                if (eq == std::string::npos || eq == 0 || eq + 1 == word.size()) {
+                    return R::err(syntax(line_no, "wait-event filters look like FIELD=VALUE"));
+                }
+                std::string value = word.substr(eq + 1);
+                if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
+                    value = value.substr(1, value.size() - 2);
+                }
+                c.event_filters.emplace_back(word.substr(0, eq), value);
+            }
         } else if (verb == "wait-alarm") {
             c.kind = CommandKind::kWaitAlarm;
             auto [id, after] = split_word(rest);

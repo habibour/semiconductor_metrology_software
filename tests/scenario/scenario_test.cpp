@@ -7,6 +7,7 @@
 // ST-cassette_run is not here: the cassette loop (FR-MC-5) is not built yet.
 
 #include <gtest/gtest.h>
+#include <unistd.h>
 
 #include <filesystem>
 #include <fstream>
@@ -31,10 +32,8 @@ class ScenarioTest : public ::testing::Test {
 protected:
     void SetUp() override {
         static int counter = 0;
-        root_ =
-            std::filesystem::temp_directory_path() /
-            ("ssim_scenario_" + std::to_string(::testing::UnitTest::GetInstance()->random_seed()) +
-             "_" + std::to_string(counter++));
+        root_ = std::filesystem::temp_directory_path() /
+                ("ssim_scenario_" + std::to_string(::getpid()) + "_" + std::to_string(counter++));
         std::filesystem::remove_all(root_);
     }
     void TearDown() override { std::filesystem::remove_all(root_); }

@@ -13,10 +13,11 @@ ctest --test-dir "$build_dir" --output-on-failure "$@" 2>&1 | tee "$log"
 status=${PIPESTATUS[0]}
 
 if [ "$status" -ne 0 ]; then
-    # Failing test names first, then the assertion text around the failures.
+    # Failing test names first, then the output ctest printed for each failing
+    # test (from its "Failed" line up to the next test starting).
     summary="$( { grep -E "^\s+[0-9]+ - |tests failed out of" "$log"
-                  grep -E "Failure|Expected|Which is|Actual|Assertion|FAIL |ERROR|Sanitizer|runtime error|Segmentation|Abort" "$log" | head -40
-                } | head -60 | sed -e 's/%/%25/g' -e 's/\r//g' | awk '{printf "%s%%0A", $0}')"
+                  awk '/\*\*\*(Failed|Exception|Timeout)|Subprocess aborted/ {p=1; print; next} /^ +Start +[0-9]+:/ {p=0} p' "$log" | head -60
+                } | head -80 | sed -e 's/%/%25/g' -e 's/\r//g' | awk '{printf "%s%%0A", $0}')"
     echo "::error title=ctest failed (exit ${status})::${summary}"
 fi
 exit "$status"

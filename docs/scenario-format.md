@@ -28,7 +28,7 @@ parse. `--quiet` hides the trace.
 | `send SxFy [nowait\|W] [device=N] [ITEM]` | Sends a data message. The W-bit is set for odd functions unless `nowait`; `W` forces it. `device=N` overrides the session id (default from `--device`, 0). |
 | `expect SxFy [timeout=5s] [PATTERN]` | Waits for a received message with this stream and function, then checks its body against the pattern. |
 | `expect-no SxFy [timeout=1s]` | Passes only if no such message arrives in the time. |
-| `wait-event CEID [timeout=5s]` | Waits for an S6F11 with this CEID; later `assert event.*` refer to it. |
+| `wait-event CEID [timeout=5s] [FIELD=VALUE ...]` | Waits for an S6F11 with this CEID that also carries each named report field with that value (`wait-event 2005 WAFER_ID=W002`); other events stay queued. Values contain no spaces. Later `assert event.*` refer to it. |
 | `wait-alarm ALID set\|clear [timeout=5s]` | Waits for an S5F1 for this alarm being set or cleared; `assert alarm.*` refer to it. |
 | `expect-closed [timeout=5s]` | Passes once the machine has closed the connection. |
 | `expect-status SVID [timeout=5s] PATTERN` | Asks S1F3 for one status variable, repeatedly, until its value matches the pattern or the time runs out. |

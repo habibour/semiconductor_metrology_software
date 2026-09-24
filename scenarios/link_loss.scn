@@ -21,9 +21,10 @@ expect S1F14 *
 expect-status 4012 timeout=60s U4[1]
 expect-status 4006 timeout=10s F4[*]
 
-# Events reach the new host again.
+# Events reach the new host again. W001 may finish before or after the host
+# came back, so wait for the event that belongs to W002, not just any 2005.
 send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"W002" ] ] ]
 expect S2F42 L[ B[4] L[*] ]
-wait-event 2005 timeout=60s
+wait-event 2005 timeout=60s WAFER_ID=W002
 assert event.WAFER_ID == "W002"
 disconnect
