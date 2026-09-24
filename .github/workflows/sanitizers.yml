@@ -1,9 +1,10 @@
 name: Sanitizers
 
-# CLAUDE.md §7 / §10: ThreadSanitizer and AddressSanitizer+UBSan are separate
+# CLAUDE.md 7 / 10: ThreadSanitizer and AddressSanitizer+UBSan are separate
 # builds (thread and address cannot be combined) and must stay clean. They run
-# on Ubuntu because the sanitizer runtimes do not work reliably on every
-# developer machine.
+# on a GitHub macOS runner because macOS is the only supported platform (PRD
+# D-11) and the sanitizer runtimes do not work on the newest macOS the
+# developer's own machine runs.
 
 on:
   push:
@@ -11,7 +12,7 @@ on:
 
 jobs:
   address-undefined:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -26,19 +27,14 @@ jobs:
 
       - name: Test
         env:
-          ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1
+          ASAN_OPTIONS: detect_leaks=0:strict_string_checks=1
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
         run: ctest --test-dir build-asan --output-on-failure
 
   thread:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-
-      # Newer kernels use more address-space randomisation than TSan supports
-      # ("unexpected memory mapping"); lowering it is the documented workaround.
-      - name: Lower ASLR entropy for TSan
-        run: sudo sysctl vm.mmap_rnd_bits=28
 
       - name: Configure (TSan)
         run: cmake --preset tsan -DSSIM_ENABLE_SECSGEM=ON

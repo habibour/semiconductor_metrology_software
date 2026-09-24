@@ -11,7 +11,7 @@
 | Status | Draft; scope to be frozen at the end of Day 1 (21 September) |
 | Purpose of the project | Portfolio project targeted at the Software Engineer opening at Frontier Semiconductor Bangladesh Ltd. (application deadline 28 September 2026) |
 | Hardware required | None. All hardware is simulated in software |
-| Development machine | Apple Silicon Mac (macOS), with CI on Linux and macOS (Windows is out of scope, see D-11) |
+| Development machine | Apple Silicon Mac (macOS). macOS is the only supported platform (see D-11) |
 
 ---
 
@@ -76,9 +76,9 @@ A credible, well-tested, portable simulator of a film-stress metrology tool: the
 |---|---|---|
 | Core library | Machine logic: state machine, scan and analysis pipeline, simulated hardware, events, logging | Everywhere (no Qt, no network dependency) |
 | SECS/GEM module | HSMS session, SECS-II codec, GEM behaviour; optional at build time and run time | Everywhere |
-| Equipment CLI | Headless machine program, used for demos, CI and Docker | macOS, Linux |
-| Operator panel | Qt Widgets window: status, controls, wafer map, alarms, message trace | macOS, Linux |
-| Host simulator | Pretend factory computer: scripted conversations with pass/fail checks | macOS, Linux |
+| Equipment CLI | Headless machine program, used for demos and CI | macOS |
+| Operator panel | Qt Widgets window: status, controls, wafer map, alarms, message trace | macOS |
+| Host simulator | Pretend factory computer: scripted conversations with pass/fail checks | macOS |
 | Tools | Octave/MATLAB stress cross-check; Python interop test with an open-source SECS/GEM library | Anywhere |
 | Optional extras | Firmware-style device simulator; C# host; Windows-only C# WPF console | See section 5 |
 
@@ -131,9 +131,9 @@ Numeric targets below are goals to be measured, not results. Record the real num
 | SM6 | Memory safety | AddressSanitizer and UBSan clean | CI job |
 | SM7 | Robustness | No crash or hang on at least 100,000 mutated protocol frames per CI run | Mutation test |
 | SM8 | Interoperability | Independent open-source SECS/GEM host completes the core scenario against the machine | Interop test |
-| SM9 | Portability | CI green on macOS (clang) and Linux (gcc) | GitHub Actions |
+| SM9 | Portability | CI green on macOS (Apple clang) | GitHub Actions |
 | SM10 | Line coverage of core, analysis and secsgem modules | At least 80% | llvm-cov / gcov |
-| SM11 | Reviewer effort | Video under 2 minutes; `docker compose up` demo works; README quickstart under 10 minutes | Manual check on a clean machine |
+| SM11 | Reviewer effort | Video under 2 minutes; `scripts/demo.sh` one-command demo works; README quickstart under 10 minutes | Manual check on a clean machine |
 
 ---
 
@@ -161,7 +161,7 @@ Numeric targets below are goals to be measured, not results. Record the real num
 | UC6 | Host connection drops mid-scan | Machine | Machine survives, keeps result, accepts a new host connection |
 | UC7 | Host sends malformed or unknown messages | Host | Machine replies with correct error messages and keeps running |
 | UC8 | Replay a recorded session for debugging | Developer | Same sequence re-sent, outputs compared |
-| UC9 | Reviewer runs the headless demo in Docker | Reviewer | Scripted scenario prints message trace and writes result files |
+| UC9 | Reviewer runs the headless demo with one command on a Mac | Reviewer | Scripted scenario prints message trace and writes result files |
 | UC10 | Reviewer runs the test suite | Reviewer | All tests pass; sanitizer builds clean |
 
 ---
@@ -172,8 +172,8 @@ Priority letters used in requirement tables: M = must (Tier 1), S = should (Tier
 
 | Tier | Contents | Target completion |
 |---|---|---|
-| Tier 1 (must) | Standalone machine: config, simulated hardware, multi-line scan, threaded pipeline, analysis and Stoney stress, state machine, alarms, Qt panel, CLI, exports, logging, unit and scenario tests, CI on macOS and Linux. SECS/GEM module: HSMS, SECS-II codec, GEM subset (communication, control state, events, alarms, remote commands, status variables, S9 errors), host simulator, interop test. README, demo video, CV. | 27 Sep (submit) |
-| Tier 2 (should) | Cassette-to-cassette loop; sample-path optimization with benchmark table; MATLAB/Octave cross-check; firmware-style device simulator with framed binary protocol and CRC; C# .NET host; equipment constants and dynamic reports; spooling; replay; Docker demo and release binaries. | 26 to 27 Sep, only if Tier 1 is green |
+| Tier 1 (must) | Standalone machine: config, simulated hardware, multi-line scan, threaded pipeline, analysis and Stoney stress, state machine, alarms, Qt panel, CLI, exports, logging, unit and scenario tests, CI on macOS. SECS/GEM module: HSMS, SECS-II codec, GEM subset (communication, control state, events, alarms, remote commands, status variables, S9 errors), host simulator, interop test. README, demo video, CV. | 27 Sep (submit) |
+| Tier 2 (should) | Cassette-to-cassette loop; sample-path optimization with benchmark table; MATLAB/Octave cross-check; firmware-style device simulator with framed binary protocol and CRC; C# .NET host; equipment constants and dynamic reports; spooling; replay; local one-command demo and a macOS release build. | 26 to 27 Sep, only if Tier 1 is green |
 | Tier 3 (could) | C# WPF or WinForms operator console (MVVM), built and seen on a real Windows machine or VM; MFC and Visual Studio experience. | Only with Windows access; otherwise excluded and not claimed |
 
 Cut order if time runs short: Tier 3, then device simulator, then C# host, then dynamic reports and spooling, then MATLAB check, then cassette loop. The tests, README, CI and CV are never cut.
@@ -314,7 +314,7 @@ frontier/
   bench/                    queue and analysis benchmarks
   scenarios/                *.scn host scripts
   scripts/                  check_stress.m, interop_secsgem.py, demo helpers
-  docker/                   Dockerfile, compose file
+  scripts/demo.sh           one-command local demo
   .github/workflows/        CI and release workflows
   results/                  generated output (git-ignored)
 ```
@@ -414,7 +414,7 @@ Verification key: U unit test, I integration test, S scenario test, F fault or f
 |---|---|---|---|
 | FR-CLI-1 | `equipment_cli` runs the machine without Qt using the same core, with options for config file, port, seed, real-time factor, output directory and scenario. | M | S |
 | FR-CLI-2 | Exit codes: 0 success, 2 configuration error, 3 runtime fault, 4 interrupted. | M | U |
-| FR-CLI-3 | A `demo` mode runs a built-in scenario against a local host simulator and exits; used by the Docker demo. | M | S |
+| FR-CLI-3 | A `demo` mode runs a built-in scenario against a local host simulator and exits; used by the one-command demo script. | M | S |
 
 ### 7.10 Logging, tracing and replay (LOG)
 
@@ -778,7 +778,7 @@ disconnect
 | NFR-REL-1 | Reliability | No crash, hang or sanitizer finding on at least 100,000 randomly mutated frames per CI run, and on malformed SECS-II bodies. | F |
 | NFR-REL-2 | Reliability | Soak test: 1,000 wafers at real-time factor 0 with a host connected and random link drops; no deadlock and resident memory growth below 5 percent. | F |
 | NFR-CON-1 | Concurrency | Whole test suite is ThreadSanitizer clean; lock hierarchy documented. | CI |
-| NFR-PORT-1 | Portability | C++17; warning-free at high warning levels on macOS (clang) and Linux (gcc). Windows is not supported or tested. | CI |
+| NFR-PORT-1 | Portability | C++17; warning-free at high warning levels with Apple clang on macOS. Linux and Windows are not supported or tested (D-11). | CI |
 | NFR-MNT-1 | Maintainability | clang-format enforced; selected clang-tidy checks in CI; public headers documented; module boundaries of 6.2 enforced by CMake targets. | CI |
 | NFR-TST-1 | Testability | Injectable clock, seeded randomness, no sleeps in unit tests. | U |
 | NFR-OBS-1 | Observability | Every state change, command, alarm and SECS message is logged with a correlation id. | U |
@@ -795,7 +795,7 @@ disconnect
 
 | Level | What it checks | Tools | Runs |
 |---|---|---|---|
-| Unit | One class or function alone (codec, fit, Stoney, state machine, queues, config) | GoogleTest | Every push, on macOS and Linux |
+| Unit | One class or function alone (codec, fit, Stoney, state machine, queues, config) | GoogleTest | Every push, on macOS |
 | Integration | Several modules together (controller with simulated hardware; HSMS with SECS-II and GEM) | GoogleTest with real sockets on loopback | Every push |
 | Scenario | Full conversations between `host_sim` and `equipment_cli` from script files | host_sim exit codes in CI | Every push |
 | Fault and fuzz | Bad input, dropped links, stalls, random mutation of frames | Custom mutation test; optional libFuzzer via Homebrew LLVM | Every push (short) and nightly (long) |
@@ -840,10 +840,10 @@ disconnect
 ### 10.3 Definition of Done (project level)
 
 - All Tier 1 requirements pass their verification methods, and the results are visible in CI.
-- CI is green on macOS and Linux; ThreadSanitizer and ASan/UBSan builds are clean.
+- CI is green on macOS; ThreadSanitizer and ASan/UBSan builds are clean.
 - The README contains a plain-English summary, architecture diagram, quickstart, demo GIF, real measured numbers and known limitations.
 - A demo video of at most two minutes exists and the link is on the CV.
-- The Docker demo runs with one command.
+- The local demo runs with one command (`scripts/demo.sh`).
 - Git history shows the standalone version, the SECS/GEM integration, at least one refactor and one measured optimization. Any bug story in the README is a real one.
 - The CV lists only what was built and can be explained in an interview.
 
@@ -853,19 +853,19 @@ disconnect
 
 | Area | Choice | Notes |
 |---|---|---|
-| Language | C++17 | Wide compiler support on macOS and Linux; no reliance on C++20 threads |
+| Language | C++17 | Apple clang on macOS is the only compiler used; no reliance on C++20 threads |
 | Build | CMake with presets | One build description for all platforms |
 | GUI | Qt 6 Widgets (Homebrew on Mac; official installer or aqtinstall in CI) | Operator panel only; core does not depend on Qt |
-| Networking | Standalone Asio (header only) | Keeps the core and Docker image free of Qt |
+| Networking | Standalone Asio (header only) | Keeps the core and the headless demo free of Qt |
 | JSON | nlohmann/json | Configuration, results, logs |
 | PNG output | stb_image_write | Headless wafer map |
 | Tests | GoogleTest via CMake FetchContent | Unit and integration tests |
 | Sanitizers | ThreadSanitizer; AddressSanitizer plus UBSan (separate builds) | Both supported by clang on Apple Silicon |
-| Profiling | Instruments (macOS), perf (Linux CI if needed) | Valgrind and GDB are not used on Apple Silicon |
+| Profiling | Instruments (macOS) | Valgrind and GDB are not used on Apple Silicon |
 | Static analysis | clang-tidy, clang-format | Enforced in CI |
 | Coverage | llvm-cov or gcov | Reported in CI |
-| CI | GitHub Actions matrix: macOS, Ubuntu | Builds, tests, sanitizers, artifacts, releases |
-| Container | Docker with a headless build | Multi-architecture image via buildx |
+| CI | GitHub Actions on macOS | Builds, tests, sanitizers, artifacts, releases |
+| Container | None. Docker would be a Linux build, which is out of scope (D-11) | |
 | Cross-check | GNU Octave or MATLAB | Claim MATLAB only if run in real MATLAB |
 | Interop | Python with `secsgem` | Independent SECS/GEM host |
 | C# host (Tier 2) | .NET on macOS, console application | Legitimate C# experience; not WPF |
@@ -885,7 +885,7 @@ disconnect
 | D-08 | Injectable clock everywhere | Real sleeps in tests | Fast, exact timer tests |
 | D-09 | Queues behind an interface | Direct std::queue | Allows the v1 to v2 optimization story |
 | D-10 | Seeded simulation with hidden truth | Random unseeded data | Repeatable known-answer tests |
-| D-11 | Supported platforms are macOS and Linux only (decided 24 Sep 2026) | Also Windows (MSVC) | No Windows machine is available, the CI Windows build was red, and no claim may rest on a platform that was never built and run. It can be re-added later; the Windows-only lines in the code are untested. |
+| D-11 | The only supported platform is macOS on Apple Silicon, the developer's own machine (decided 24 Sep 2026; first Windows was dropped, then Linux) | Also Linux (gcc) and Windows (MSVC), Docker | Only macOS is available and used, and no claim may rest on a platform that was never built and run. Linux and Windows can be added later; the portability fixes already made (for GCC and libstdc++) stay, but nothing claims Linux or Windows support, and the Docker demo, Linux archive and multi-arch image are cut. |
 
 ---
 
@@ -897,12 +897,12 @@ A desktop and headless application is not deployed like a website. Delivery ther
 
 - README with plain-English summary, architecture diagram, quickstart, results table, limits and a short "how to explain this in an interview" note.
 - Demo GIF in the README and a video of at most two minutes, unlisted, linked from the README and the CV. Storyboard: start the panel; switch to Remote; run the host script; watch a scan; show the result and map; trigger a sensor alarm; clear it; show tests and CI badges.
-- CI badges (macOS, Linux, sanitizers), test count and benchmark table.
+- CI badges (macOS, sanitizers), test count and benchmark table.
 
 ### 12.2 Level 2 (should)
 
-- GitHub Release built by CI on a version tag: macOS app (macdeployqt) and Linux archive; no Windows build (D-11). Unsigned builds show security warnings; the README explains how to open them.
-- Docker image with `equipment_cli` and `host_sim`. Command: `docker compose up` runs the demo scenario, prints the message trace and writes the wafer map and CSV to a mounted folder. Build for both amd64 and arm64.
+- GitHub Release built by CI on a version tag: macOS app (macdeployqt) only (D-11). Unsigned builds show security warnings; the README explains how to open them.
+- `scripts/demo.sh`: one command that starts `equipment_cli serve`, runs the normal-run scenario with `host_sim`, prints the message trace and leaves the wafer map and CSV in a results folder. No Docker (D-11).
 
 ### 12.3 Level 3 (could; probably skipped)
 
@@ -910,7 +910,7 @@ A WebAssembly build of the panel or a hosted status page. It would lack the SECS
 
 ### 12.4 Design consequence
 
-The code is split into a core library, a headless command-line program and a thin Qt layer, from day one. The Docker demo, scenarios, tests and GUI all share the same core. The CI workflow is created on day one so portability problems between macOS and Linux appear early.
+The code is split into a core library, a headless command-line program and a thin Qt layer, from day one. The demo, scenarios, tests and GUI all share the same core. The CI workflow is created on day one so build problems appear early.
 
 ---
 
@@ -918,12 +918,12 @@ The code is split into a core library, a headless command-line program and a thi
 
 | Day | Date | Work | Exit criteria |
 |---|---|---|---|
-| D1 | Mon 21 Sep | Repository skeleton, CMake, CI on macOS and Linux with a passing test; config, clock, queues (v1), event bus, logger; wafer model and simulated hardware; scope frozen | CI green; UT-STONEY-1 forward model tests pass |
+| D1 | Mon 21 Sep | Repository skeleton, CMake, CI on macOS with a passing test; config, clock, queues (v1), event bus, logger; wafer model and simulated hardware; scope frozen | CI green; UT-STONEY-1 forward model tests pass |
 | D2 | Tue 22 Sep | Scan thread, processing pipeline, controller and alarms, exports, CLI | Standalone run produces JSON, CSV, PNG; SM1 and SM2 met; tag v0.1 |
 | D3 | Wed 23 Sep | Qt panel, wafer map, control modes, progress; README draft; cassette loop if time | Panel usable; first GIF |
 | D4 | Thu 24 Sep | SECS-II codec with fuzz and round-trip tests; HSMS framing, session, timers on fake clock | UT-CODEC and UT-HSMS pass |
 | D5 | Fri 25 Sep | GEM module, integration into the app as a separate step, host_sim and scenarios, interop test | ST scenarios pass; XT-SECSGEM-1 passes; tag v0.2 |
-| D6 | Sat 26 Sep | Refactor commit; sanitizer findings fixed; v2 ring buffer and parallel fits with benchmarks; Octave check; Docker demo; release workflow | Numbers recorded; tag v0.3 |
+| D6 | Sat 26 Sep | Refactor commit; sanitizer findings fixed; v2 ring buffer and parallel fits with benchmarks; Octave check; local demo script; macOS release workflow | Numbers recorded; tag v0.3 |
 | D7 | Sun 27 Sep | README and video final; CV final; submit | Application sent |
 | Buffer | Mon 28 Sep | Deadline day; no planned work | Only emergencies |
 
@@ -940,13 +940,13 @@ Parallel CV tasks (small, daily): rewrite the internship bullets against the job
 | R1 | Seven days is not enough | High | High | Tiers and cut order in section 5; standalone machine first; CI early |
 | R2 | SECS/GEM details wrong because standards are paywalled | Medium | High | Cross-check with open-source library docs and behaviour; interop test; describe as a subset |
 | R3 | Threading bugs (races, deadlocks) | Medium | High | Single-writer rule, queues only, ThreadSanitizer, fake clock, shutdown tests |
-| R4 | Linux build breaks late | Medium | Medium | CI on Linux from day one; portable libraries only (Windows is out of scope, D-11) |
+| R4 | A build problem appears late | Medium | Medium | CI on macOS from day one; portable libraries only (Linux and Windows are out of scope, D-11) |
 | R5 | Qt installation or packaging trouble | Medium | Medium | Homebrew Qt locally; CI installs Qt; headless mode keeps the demo independent of Qt |
 | R6 | Physics or sign-convention mistakes | Medium | Medium | Known-answer tests; Octave cross-check; convention documented and tested |
 | R7 | Timer tests are flaky | Medium | Low | Injectable clock; no real sleeps in unit tests |
 | R8 | Scope creep into extras | High | Medium | Frozen scope; Tier 2 only when Tier 1 is green |
 | R9 | Claims on the CV cannot be defended | Medium | High | Claim only what is built; rehearse explanations of every design choice |
-| R10 | Reviewer cannot or will not run the code | High | Medium | Video, GIF, CI badges, Docker one-liner, release builds |
+| R10 | Reviewer cannot or will not run the code | High | Medium | Video, GIF, CI badges, one-command demo script, macOS release build |
 | R11 | Interop library not installable or differs | Low | Medium | Pin a version; fall back to a scripted host and manual protocol review |
 
 ---
@@ -1082,7 +1082,7 @@ cmake --build build-tsan -j && ctest --test-dir build-tsan --output-on-failure
 octave scripts/check_stress.m results/<run_id>/W042/samples.csv
 
 # containerised demo
-docker compose up
+scripts/demo.sh
 ```
 
 ## Appendix B. CV usage rules and draft bullets
@@ -1099,6 +1099,6 @@ Draft bullets (fill after measuring):
 
 - Designed and implemented a multithreaded C++17 machine-control simulator for a wafer film-stress metrology tool (controller, scan, processing pool, HSMS I/O and logger threads); replaced a mutex queue with a lock-free ring buffer, raising sample throughput [X]x and cutting per-wafer analysis from [a] ms to [b] ms.
 - Integrated a SECS/GEM subset (HSMS session and timers, SECS-II codec, GEM communication and control states, events, alarms, remote commands) as an optional module; verified against an independent open-source host; [N] automated tests, ThreadSanitizer and AddressSanitizer clean.
-- Built a Qt 6 operator panel and a headless CLI on a shared core library; CI builds and tests on Linux and macOS; one-command Docker demo.
+- Built a Qt 6 operator panel and a headless CLI on a shared core library; CI builds and tests on macOS; one-command local demo.
 - Validated film-stress computation (Stoney's equation) with known-answer tests within [x] percent under sensor noise and injected faults; cross-checked results with an Octave/MATLAB script.
 - Applied fuzzing and fault injection to the protocol stack ([N] mutated frames, zero crashes) and fixed [real bug description, if any].

@@ -10,7 +10,7 @@ session and server, GEM communication and control states, remote commands,
 events, alarms, status variables, S9 errors) with a scripted host simulator, seven
 scenario scripts and an interop test against an independent open-source host.
 Not done yet: the cassette loop, equipment constants and dynamic reports,
-benchmarks, the Docker demo and the demo video. This README claims nothing
+benchmarks, the one-command demo script and the demo video. This README claims nothing
 about those. It is not a certified or complete GEM implementation.
 
 ## What it is, in plain English
@@ -148,7 +148,7 @@ SECS/GEM subset (this project's own implementation):
 
 Not verified yet:
 
-- Linux CI is not yet green (a test fails on Ubuntu, see the Actions tab). Windows is out of scope.
+- Only macOS on Apple Silicon is supported and tested. Linux and Windows are out of scope (PRD D-11), although the code was fixed to build cleanly with GCC's standard library.
 - The cassette-run scenario (ST-cassette_run) does not exist: the cassette loop is not built.
 - ThreadSanitizer and AddressSanitizer/UBSan could not be run on the
   development machine (the sanitizer runtime fails even on an empty program

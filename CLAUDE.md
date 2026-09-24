@@ -23,7 +23,7 @@ Build order that must be respected: (1) fully working standalone machine, then (
 Hard constraints:
 
 - No hardware. All devices are simulated behind interfaces.
-- Developed on an Apple Silicon Mac; CI must also pass on Linux (gcc). Windows is out of scope (PRD D-11): nothing may claim Windows support.
+- Developed on an Apple Silicon Mac. macOS is the only supported platform (PRD D-11); nothing may claim Linux or Windows support.
 - Public information only. No Frontier or FSM names, logos or proprietary material. No text copied from SEMI standards. Describe SECS/GEM as "a subset based on publicly documented behaviour", never as certified or complete.
 - Honesty rule: nothing in code, README or CV material may claim something that has not been built and run. That includes WPF, WinForms, MFC, MATLAB (only if run in real MATLAB), certification, and any performance number. Numbers come from measurements only.
 - Not in scope: web app, public-internet service, machine learning, real drivers.
@@ -70,7 +70,7 @@ Rules:
 - Dependencies point downward only. `ssim_core` must never include SECS/GEM, network or Qt headers.
 - The machine must build, pass its tests and complete a scan with the SECS/GEM module absent (`SSIM_ENABLE_SECSGEM=OFF`) or disabled at runtime (`comm.enabled=false`).
 - Nothing outside the hardware factory names a concrete simulated device. Everything else uses the interfaces.
-- Qt is used only in `equipment_qt`. The Docker demo and CI scenarios never need Qt at runtime.
+- Qt is used only in `equipment_qt`. The demo script and CI scenarios never need Qt at runtime.
 
 ### 3.3 Threads
 
@@ -132,7 +132,7 @@ frontier/
   bench/                    micro-benchmarks (Release only)
   scenarios/                *.scn host scripts used by scenario tests and the demo
   scripts/                  check_stress.m, interop_secsgem.py, helper scripts
-  docker/                   Dockerfile, compose file
+  scripts/demo.sh           one-command local demo
   .github/workflows/        ci.yml, sanitizers.yml, release.yml
   results/  build*/         generated; git-ignored
 ```
@@ -179,7 +179,7 @@ Placement rules:
 - Parse bytes with explicit big-endian helpers and `memcpy`; never `reinterpret_cast` a buffer into a struct. Use fixed-width integer types for anything on the wire.
 - Prefer value semantics and `std::string_view`; avoid copying sample arrays (move blocks through queues).
 - Virtual functions are for interfaces and strategies, not for hot inner loops.
-- Warnings are errors in CI: `-Wall -Wextra -Wpedantic -Werror` (clang and gcc).
+- Warnings are errors in CI: `-Wall -Wextra -Wpedantic -Werror` (Apple clang).
 
 ### 6.2 Concurrency
 
@@ -239,7 +239,7 @@ Placement rules:
 ### 6.9 Portability
 
 - OS-specific code lives only in `src/platform/` behind an interface. Use `std::filesystem` for paths, explicit endianness, no assumptions about the size of `long`, no compiler extensions.
-- Keep file names case-consistent (Linux CI is case-sensitive).
+- Keep file names case-consistent (macOS is usually case-insensitive, so a mismatch would hide until the code moves elsewhere).
 
 ### 6.10 Dependencies
 
@@ -257,7 +257,7 @@ Placement rules:
 - Do not force-push `main`. Do not skip hooks or CI. Do not commit `build*/`, `results/`, binaries, IDE files or anything secret.
 - Tags mark the story: `v0.1` standalone machine, `v0.2` SECS/GEM integrated, `v0.3` refactored and optimized with benchmarks.
 - Make "maintain, fix, refactor, optimize" visible in history: simple v1, then the SECS/GEM integration commit series, then a refactor commit, real fix commits (only for real bugs), and a perf commit with before and after numbers.
-- CI runs on macOS (clang) and Ubuntu (gcc): build with warnings as errors, unit, integration and scenario tests, ThreadSanitizer job, ASan and UBSan job, clang-format check, clang-tidy, coverage. CI is created on day one, so portability problems show up early. A red CI is fixed before new features.
+- CI runs on macOS (Apple clang): build with warnings as errors, unit, integration and scenario tests, ThreadSanitizer job, ASan and UBSan job, clang-format check, clang-tidy, coverage. CI is created on day one, so portability problems show up early. A red CI is fixed before new features.
 
 ## 8. Commands (macOS; names are placeholders until the targets exist)
 
@@ -284,7 +284,7 @@ cmake --build build-asan -j && ctest --test-dir build-asan --output-on-failure
 clang-format -i $(git ls-files '*.cpp' '*.hpp')
 python3 scripts/interop_secsgem.py --port 5000
 octave scripts/check_stress.m results/<run_id>/<wafer_id>/samples.csv
-docker compose up
+scripts/demo.sh
 ```
 
 Mac limits to remember: no Valgrind or GDB on Apple Silicon (use ASan, Instruments, LLDB); MFC, WPF and WinForms do not build here; Windows is not supported.
@@ -303,7 +303,7 @@ Mac limits to remember: no Valgrind or GDB on Apple Silicon (use ASan, Instrumen
 
 ## 10. Definition of done for any change
 
-- Builds warning-free on the local machine; CI expected green on macOS and Linux.
+- Builds warning-free on the local machine; CI expected green on macOS.
 - New or changed behaviour has tests (including unhappy paths); bug fixes have a regression test.
 - Sanitizer builds still clean for anything touching threads, memory or parsing.
 - Public headers document units and thread-safety; docs updated in the same commit.
@@ -325,12 +325,12 @@ Mac limits to remember: no Valgrind or GDB on Apple Silicon (use ASan, Instrumen
 
 | Day | Date | Target | Status |
 |---|---|---|---|
-| D1 | Mon 21 Sep | Skeleton, CI on macOS and Linux, core basics, wafer model and simulated hardware, scope frozen | code done, CI not yet confirmed green |
+| D1 | Mon 21 Sep | Skeleton, CI on macOS, core basics, wafer model and simulated hardware, scope frozen | code done, CI not yet confirmed green |
 | D2 | Tue 22 Sep | Scan, processing, controller, alarms, exports, CLI; tag v0.1 | not started |
 | D3 | Wed 23 Sep | Qt panel, wafer map, control modes; README draft | done Thu 24 Sep and committed locally, not pushed; first GIF not recorded, CI not confirmed, sanitizers not runnable on this Mac; cassette loop deferred to Day 6 |
 | D4 | Thu 24 Sep | SECS-II codec, fuzz tests, HSMS framing and timers | code done and committed locally, not pushed; UT-CODEC and UT-HSMS pass on this Mac; CI, sanitizers and the `TODO(verify)` protocol values unconfirmed |
-| D5 | Fri 25 Sep | GEM module, integration into the app as a separate step, host_sim and scenarios, interop test | done Thu 24 Sep and committed locally: GEM layer, `serve`, host_sim, 7 scenarios pass, XT-SECSGEM-1 passes (15/15) on this Mac; ST-cassette_run deferred (no cassette loop); CI not green (Ubuntu test fails, cause not yet seen), tag v0.2 not placed |
-| D6 | Sat 26 Sep | Refactor, sanitizer fixes, ring buffer and benchmarks, Octave check, Docker demo; tag v0.3 | not started |
+| D5 | Fri 25 Sep | GEM module, integration into the app as a separate step, host_sim and scenarios, interop test | done Thu 24 Sep and committed locally: GEM layer, `serve`, host_sim, 7 scenarios pass, XT-SECSGEM-1 passes (15/15) on this Mac; ST-cassette_run deferred (no cassette loop); the old Ubuntu CI failure was a real bug (zero-noise `normal_distribution`), fixed; scope is now macOS only; tag v0.2 not placed |
+| D6 | Sat 26 Sep | Refactor, sanitizer fixes, ring buffer and benchmarks, Octave check, local demo script; tag v0.3 | not started |
 | D7 | Sun 27 Sep | README and video final, CV final, submit | not started |
 
 Open questions are tracked in PRD section 16.3 (message-layout verification, Asio versus Qt Network, CV project selection, internship duties, licence, competitive-programming and travel lines).

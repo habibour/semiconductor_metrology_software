@@ -25,7 +25,7 @@ A throwaway CMake project (not part of this repo) declared this exact
 to a loopback port at runtime. It configured, built and ran cleanly on
 macOS/AppleClang.
 
-Linux (gcc) is **not yet verified** (Windows was dropped from scope on 2026-09-24, PRD D-11) — Asio is not wired
+Linux is not supported (Linux and Windows were dropped from scope on 2026-09-24, PRD D-11), so only macOS is verified — Asio is not wired
 into any real target yet (no networking code exists before Day 4), so
 nothing exercises it in the CI matrix today. That verification happens for
 real when `ssim_secsgem` is added and CI builds it on all three systems;

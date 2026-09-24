@@ -31,7 +31,7 @@ polish — this is a verification and packaging pass over Days 1–6's actual ou
    Habib can actually say out loud, pointing at the traceability table (PRD
    §15) ideas: threading model, SECS/GEM subset boundary, Stoney validation,
    patterns used, what was cut and why (tiers/cut order).
-7. CI badges (macOS/Linux, TSan, ASan/UBSan), test count, benchmark
+7. CI badges (macOS, TSan, ASan/UBSan), test count, benchmark
    table linking to `docs/benchmarks.md`.
 8. Third-party licence list per NFR-LIC-1 (Qt LGPL+dynamic linking, Asio Boost
    licence, GoogleTest BSD, nlohmann/json MIT, stb public domain).
@@ -47,13 +47,12 @@ polish — this is a verification and packaging pass over Days 1–6's actual ou
 2. Trim to ≤2 minutes; upload unlisted; link from README and CV.
 3. Re-embed a short GIF excerpt in the README itself.
 
-## 4. Docker / release sanity check
+## 4. Demo / release sanity check
 
-1. Re-run `docker compose up` (ideally on a machine/VM that hasn't built the
-   project before) and confirm the one-command demo still works exactly as
-   Day 6 left it.
-2. Confirm the tagged release (`v0.3`) artifacts are attached and downloadable
-   for macOS and Linux.
+1. Re-run `scripts/demo.sh` from a fresh clone (no leftover build folders) and
+   confirm the one-command demo still works exactly as Day 6 left it.
+2. Confirm the tagged release (`v0.3`) macOS artifact is attached and
+   downloadable.
 
 ## 5. CV finalization (Appendix B rules)
 
@@ -92,7 +91,7 @@ polish — this is a verification and packaging pass over Days 1–6's actual ou
 - [ ] CI badges, test count, benchmark table all accurate and current.
 - [ ] No proprietary names/logos, no SEMI standard text, no unbuilt-claim
       (WPF/WinForms/MFC/certified) anywhere in README or CV.
-- [ ] `docker compose up` re-verified working.
+- [ ] `scripts/demo.sh` re-verified from a fresh clone.
 - [ ] CV finalized, one page, no placeholders left in.
 - [ ] PRD §10.3 Definition of Done and §15 traceability table both re-walked
       and confirmed true.

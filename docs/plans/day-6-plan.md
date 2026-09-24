@@ -1,4 +1,4 @@
-# Day 6 plan — refactor, sanitizers, v2 ring buffer + parallel fits + benchmarks, Octave check, Docker, release
+# Day 6 plan — refactor, sanitizers, v2 ring buffer + parallel fits + benchmarks, Octave check, local demo, macOS release
 
 Read `docs/specs/day-6-spec.md` first. This day is explicitly "measure first" —
 PRD §6.6: never optimize without a benchmark showing the problem, never publish a
@@ -73,15 +73,15 @@ PRD §13.
    → this is XT-OCTAVE-1; record the actual % difference against the 0.5%
    target.
 
-## 6. Docker + release
+## 6. Local demo + macOS release (no Docker, no Linux: PRD D-11)
 
-1. `docker/Dockerfile`, `docker/compose.yml` — headless build (`equipment_cli` +
-   `host_sim`, no Qt), `docker compose up` runs the demo scenario, prints the
-   message trace, writes wafer map + CSV to a mounted `results/` folder.
-   Multi-arch (amd64+arm64) via buildx.
-2. `.github/workflows/release.yml` — on a version tag: build macOS app
-   (macdeployqt) and Linux archive (no Windows, PRD D-11); attach to
-   the GitHub Release.
+1. `scripts/demo.sh` — one command: starts `equipment_cli serve` on a free
+   port, runs `scenarios/normal_run.scn` with `host_sim`, prints the message
+   trace, leaves the wafer map and CSV in a results folder, and shuts the
+   machine down. Exit code follows the scenario result.
+2. `.github/workflows/release.yml` — on a version tag: build the macOS app
+   (macdeployqt) and attach it to the GitHub Release. Unsigned; the README
+   explains how to open it.
 3. Tag `v0.3` once sanitizers are clean and numbers are recorded.
 
 ## 7. Stretch list (attempt only after §1–6 are done, strictly in this order —
@@ -117,8 +117,8 @@ this mirrors the PRD's own cut order so cutting later items first is correct):
       truthfully, met or not.
 - [ ] Coverage number recorded (SM10 target 80%, report actual).
 - [ ] XT-OCTAVE-1 run and % difference recorded.
-- [ ] `docker compose up` runs the demo end-to-end.
-- [ ] Release workflow builds the macOS and Linux artifacts on a tag.
+- [ ] `scripts/demo.sh` runs the demo end-to-end on this Mac.
+- [ ] Release workflow builds the macOS app on a tag.
 - [ ] Tag `v0.3` pushed.
 - [ ] Stretch items attempted in cut order only if time remained, and any
       skipped item is explicitly noted as skipped, not silently absent.

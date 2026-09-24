@@ -1,25 +1,14 @@
 name: CI
 
+# macOS on Apple Silicon is the only supported platform (PRD D-11).
+
 on:
   push:
   pull_request:
 
 jobs:
   build-and-test:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-latest
-            cc: clang
-            cxx: clang++
-          - os: ubuntu-latest
-            cc: gcc
-            cxx: g++
-    runs-on: ${{ matrix.os }}
-    env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -42,7 +31,7 @@ jobs:
   # SECS/GEM module. The dev preset builds it (SSIM_ENABLE_SECSGEM=ON), so this
   # job keeps proving the OFF configuration.
   build-without-secsgem:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -56,12 +45,12 @@ jobs:
         run: ctest --test-dir build-off --output-on-failure
 
   clang-format-check:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Install clang-format
-        run: sudo apt-get update && sudo apt-get install -y clang-format
+        run: brew install clang-format
 
       - name: Check formatting
         run: |

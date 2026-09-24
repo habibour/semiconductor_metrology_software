@@ -18,7 +18,7 @@ numbers, benchmark results, coverage figures, bug stories or interview claims").
 | 12.1 | README: plain-English summary, architecture diagram, quickstart, results table, limits, "how to explain this in an interview" note | PRD §12.1 |
 | 12.1 | Demo GIF + ≤2-minute unlisted video, linked from README and CV; storyboard: panel start → switch to Remote → run host script → watch scan → show result/map → trigger alarm → clear it → show tests/CI badges | PRD §12.1 |
 | 12.1 | CI badges (three OS, sanitizers), test count, benchmark table | PRD §12.1 |
-| 12.2 | Confirm the Level 2 release/Docker deliverables from Day 6 are actually linked and working from the README | PRD §12.2 |
+| 12.2 | Confirm the Level 2 release and local demo deliverables from Day 6 are actually linked and working from the README | PRD §12.2 |
 | NFR-DOC-1 | README quickstart verified to work from a clean checkout in under 10 minutes — actually time it | PRD §9 |
 | NFR-LIC-1 | Own code under a permissive licence (set Day 1); third-party licences listed (Qt LGPL+dynamic linking, Asio Boost licence, GoogleTest BSD, nlohmann/json MIT, stb public domain) | PRD §9 |
 | NFR-IP-1 | No Frontier/FSM names, logos or proprietary material; no SEMI standard text; SECS/GEM described as "a subset based on publicly documented behaviour" | PRD §9 |
@@ -34,7 +34,7 @@ No new automated test IDs. Verification is manual/inspection (verification key
 "D" throughout PRD §10.3):
 
 - Clean-checkout timing of the README quickstart (target: under 10 minutes).
-- `docker compose up` re-run from a genuinely clean environment if possible.
+- `scripts/demo.sh` re-run from a fresh clone.
 - Every README number cross-checked against `docs/benchmarks.md` / actual CI
   run results from Day 6 — no number typed in from memory.
 - Video watched back at real length to confirm it's ≤2 minutes and matches the

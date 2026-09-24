@@ -1,9 +1,9 @@
-# Day 6 spec — refactor, sanitizers, v2 ring buffer + parallel fits + benchmarks, Octave check, Docker, release
+# Day 6 spec — refactor, sanitizers, v2 ring buffer + parallel fits + benchmarks, Octave check, local demo, macOS release
 
 Source of truth: `docs/PRD.md`. This file is a filtered index into it.
 
 PRD §13, row D6: "Refactor commit; sanitizer findings fixed; v2 ring buffer and
-parallel fits with benchmarks; Octave check; Docker demo; release workflow."
+parallel fits with benchmarks; Octave check; local demo script; macOS release workflow."
 Exit: "Numbers recorded; tag v0.3."
 
 This is the "maintain, fix, refactor, optimize" day the job posting explicitly
@@ -25,7 +25,7 @@ Never invent a benchmark number or a bug story (CLAUDE.md §11, PRD §6.6/§9 ru
 | SM5, SM7 | ThreadSanitizer-clean CI job; fuzz/mutation CI job at ≥100,000 frames | PRD §3.3 |
 | SM10 | Line coverage ≥80% on `ssim_core`, `ssim_analysis`, `ssim_secsgem`, measured via llvm-cov/gcov | PRD §3.3 |
 | FR-TOOL-1 | `scripts/check_stress.m` recomputes stress from exported CSV, reports % difference, runs in Octave or MATLAB | PRD §7.14 |
-| 12.2 | GitHub Release on version tag (Windows zip via windeployqt, macOS app via macdeployqt, Linux archive); Docker image (`equipment_cli` + `host_sim`), `docker compose up` runs the demo scenario, amd64+arm64 | PRD §12.2 |
+| 12.2 | GitHub Release on version tag (macOS app via macdeployqt only); one-command local demo `scripts/demo.sh` (`equipment_cli serve` + `host_sim` normal run). No Docker, Linux or Windows artifacts (PRD D-11). | PRD §12.2 |
 | NFR-PERF-1..3 | Baseline-then-improved numbers for wafer analysis time, sample-path throughput, SECS-II codec encode+decode rate — recorded in `docs/benchmarks.md`, copied to README from there, never invented | PRD §9, §6.6 |
 
 ### Stretch, in the PRD's own cut order (attempt only after everything above is
