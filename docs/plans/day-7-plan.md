@@ -31,7 +31,7 @@ polish — this is a verification and packaging pass over Days 1–6's actual ou
    Habib can actually say out loud, pointing at the traceability table (PRD
    §15) ideas: threading model, SECS/GEM subset boundary, Stoney validation,
    patterns used, what was cut and why (tiers/cut order).
-7. CI badges (macOS/Linux/Windows, TSan, ASan/UBSan), test count, benchmark
+7. CI badges (macOS/Linux, TSan, ASan/UBSan), test count, benchmark
    table linking to `docs/benchmarks.md`.
 8. Third-party licence list per NFR-LIC-1 (Qt LGPL+dynamic linking, Asio Boost
    licence, GoogleTest BSD, nlohmann/json MIT, stb public domain).
@@ -53,7 +53,7 @@ polish — this is a verification and packaging pass over Days 1–6's actual ou
    project before) and confirm the one-command demo still works exactly as
    Day 6 left it.
 2. Confirm the tagged release (`v0.3`) artifacts are attached and downloadable
-   for all three OSes.
+   for macOS and Linux.
 
 ## 5. CV finalization (Appendix B rules)
 

@@ -16,12 +16,6 @@ jobs:
           - os: ubuntu-latest
             cc: gcc
             cxx: g++
-          - os: windows-latest
-            # No CC/CXX override: the default CMake generator on Windows is
-            # Visual Studio (multi-config), which drives MSVC via MSBuild and
-            # does not need cl.exe on PATH the way Makefiles/Ninja would.
-            cc: ""
-            cxx: ""
     runs-on: ${{ matrix.os }}
     env:
       CC: ${{ matrix.cc }}

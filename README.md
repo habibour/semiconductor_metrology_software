@@ -118,7 +118,7 @@ are marked `TODO(verify)` in `docs/protocol-notes.md`.
 
 Not verified yet:
 
-- Linux and Windows CI results are not confirmed.
+- Linux CI is not yet green (a test fails on Ubuntu, see the Actions tab). Windows is out of scope.
 - ThreadSanitizer and AddressSanitizer/UBSan could not be run on the
   development machine (the sanitizer runtime fails even on an empty program
   there). A sanitizer workflow exists in `.github/workflows/sanitizers.yml` but

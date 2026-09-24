@@ -32,6 +32,7 @@ target_link_libraries(ssim_secsgem
 # Only .cpp files include it; no public ssim header does.
 target_include_directories(ssim_secsgem SYSTEM PUBLIC "${asio_SOURCE_DIR}/asio/include")
 target_compile_definitions(ssim_secsgem PUBLIC ASIO_STANDALONE ASIO_NO_DEPRECATED)
+# Not built or tested: Windows is out of scope (PRD D-11).
 if(WIN32)
     target_compile_definitions(ssim_secsgem PUBLIC _WIN32_WINNT=0x0A00)
     target_link_libraries(ssim_secsgem PUBLIC ws2_32 mswsock)

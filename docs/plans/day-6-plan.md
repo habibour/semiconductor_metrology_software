@@ -79,8 +79,8 @@ PRD §13.
    `host_sim`, no Qt), `docker compose up` runs the demo scenario, prints the
    message trace, writes wafer map + CSV to a mounted `results/` folder.
    Multi-arch (amd64+arm64) via buildx.
-2. `.github/workflows/release.yml` — on a version tag: build Windows zip
-   (windeployqt-bundled Qt), macOS app (macdeployqt), Linux archive; attach to
+2. `.github/workflows/release.yml` — on a version tag: build macOS app
+   (macdeployqt) and Linux archive (no Windows, PRD D-11); attach to
    the GitHub Release.
 3. Tag `v0.3` once sanitizers are clean and numbers are recorded.
 
@@ -96,9 +96,8 @@ this mirrors the PRD's own cut order so cutting later items first is correct):
    S2F33/35/37) if not done Day 5; FR-HSMS-8 (spooling).
 4. Real MATLAB run, only if MATLAB is actually accessible.
 5. Cassette loop, only if deferred from Day 3.
-6. Resolve Q1 for real: attempt Tier 3 (C# WPF, PRD §7.14 FR-HOST-5) only with
-   confirmed Windows/VM access; otherwise explicitly mark it excluded, not
-   silently dropped.
+6. Q1 is answered (no Windows, PRD D-11): Tier 3 (C# WPF, FR-HOST-5) is
+   excluded. Nothing to attempt.
 
 ## 8. CV alignment tasks (parallel, small — PRD §13)
 
@@ -119,7 +118,7 @@ this mirrors the PRD's own cut order so cutting later items first is correct):
 - [ ] Coverage number recorded (SM10 target 80%, report actual).
 - [ ] XT-OCTAVE-1 run and % difference recorded.
 - [ ] `docker compose up` runs the demo end-to-end.
-- [ ] Release workflow builds all three OS artifacts on a tag.
+- [ ] Release workflow builds the macOS and Linux artifacts on a tag.
 - [ ] Tag `v0.3` pushed.
 - [ ] Stretch items attempted in cut order only if time remained, and any
       skipped item is explicitly noted as skipped, not silently absent.

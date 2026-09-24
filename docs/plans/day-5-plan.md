@@ -91,4 +91,4 @@ isolation) → wire into `equipment_cli` behind `SSIM_ENABLE_SECSGEM` → `host_
 - [ ] `SSIM_ENABLE_SECSGEM=OFF` / `comm.enabled=false` still fully functional —
       no regression from Days 1–3.
 - [ ] Tag `v0.2` pushed.
-- [ ] Q1 answered (even if the answer is "no Windows access, Tier 3 excluded").
+- [x] Q1 answered: no Windows access, Tier 3 excluded (PRD D-11).
