@@ -23,8 +23,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The independent SECS/GEM host for the interop test XT-SECSGEM-1.
+      - name: Python environment with secsgem
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install secsgem==0.3.0
+
       - name: Configure (dev preset)
-        run: cmake --preset dev
+        run: cmake --preset dev -DSSIM_INTEROP_PYTHON=${{ github.workspace }}/.venv/bin/python
 
       - name: Build
         run: cmake --build build --config Debug -j

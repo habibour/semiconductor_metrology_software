@@ -84,11 +84,10 @@ isolation) → wire into `equipment_cli` behind `SSIM_ENABLE_SECSGEM` → `host_
 
 ## Day 5 done-checklist (maps back to day-5-spec.md)
 
-- [ ] IT-GEM-1 and IT-CTRL-2 pass.
-- [ ] All 7 scenario tests (ST-normal_run … ST-t3_timeout) pass.
-- [ ] XT-SECSGEM-1 run and result recorded (pass, or honestly reported as
-      blocked with the reason).
-- [ ] `SSIM_ENABLE_SECSGEM=OFF` / `comm.enabled=false` still fully functional —
-      no regression from Days 1–3.
+- [x] IT-GEM-1 and IT-CTRL-2 pass.
+- [x] 7 of the 8 scenarios in PRD 7.14 pass; ST-cassette_run is deferred (the cassette loop is not built).
+- [x] XT-SECSGEM-1 run and result recorded: PASS, 15/15 (docs/protocol-notes.md).
+- [x] `SSIM_ENABLE_SECSGEM=OFF` / `comm.enabled=false` still fully functional —
+      no regression from Days 1–3 (140 tests pass with the module off).
 - [ ] Tag `v0.2` pushed.
 - [x] Q1 answered: no Windows access, Tier 3 excluded (PRD D-11).

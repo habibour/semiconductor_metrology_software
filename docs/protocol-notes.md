@@ -1,8 +1,8 @@
 # Protocol notes: HSMS and SECS-II structure
 
-Status: Day 4. Scope is the frame header, SType table, connection states and
-item header only. Message-level layouts (S1F13, S2F41, S6F11, ...) are checked
-on Day 5 when those messages are built.
+Status: Day 5. Day 4 covered the frame header, SType table, connection states
+and item header. Day 5 adds the message-level layouts, checked by the interop
+test (see the last section).
 
 ## How this was cross-checked (PRD open question Q2)
 
@@ -66,3 +66,28 @@ reading of the standard, so "matches secsgem" is the strongest claim made.
 `pip download secsgem --no-deps --no-binary :all:` succeeded (0.3.0). A full
 `pip install` and a working host conversation have not been tried yet; that is
 FR-TOOL-2 on Day 5.
+
+## Message layouts: confirmed by the interop test (Day 5)
+
+`scripts/interop_secsgem.py` (XT-SECSGEM-1) runs a real `equipment_cli serve`
+and connects to it as a host using `secsgem` 0.3.0, sharing no code with this
+project. On 2026-09-24 it passed 15 of 15 checks, and a negative run (no fault
+configured, so no alarm) failed with exit code 1, so the checks can fail. What
+that confirms, from the library's side:
+
+| Confirmed | How |
+|---|---|
+| HSMS Select handshake and the machine as the passive entity | the library connected and reached "communicating" |
+| S1F13 from the host as `L2{MDLN, SOFTREV}` answered by S1F14 `L2{COMMACK, L2{MDLN, SOFTREV}}` | library's own S1F13 exchange succeeded |
+| S1F3 with U-type SVIDs, S1F4 with mixed value types, an unknown SVID as an empty item | values decoded by the library |
+| S2F41 with ASCII RCMD and `L2{CPNAME A, CPVAL A}` parameters, S2F42 `L2{HCACK B, L}` | START gave HCACK 4, CLEAR_ALARM HCACK 0 |
+| S6F11 `L3{DATAID U4, CEID U4, L[L2{RPTID U4, L[V]}]}` with A, U1, F4 and BOOLEAN values | library decoded events 2004 and 2005 and returned S6F12 |
+| S5F1 `L3{ALCD B, ALID U4, ALTX A}` with bit 7 = set | library decoded set and cleared alarms and returned S5F2 |
+
+Still **not** confirmed by any independent source (kept as `TODO(verify)` in the
+code): the Select/Deselect status values, Reject reasons other than 4, the
+CPACK and ALCD category values, the S9 message bodies (the interop test does not
+provoke them), T8 and T7-restart behaviour, and how a real host reacts to
+S1F17/S1F15. The library also expects hosts to define reports dynamically
+(S2F33/S2F35, FR-GEM-8, not built), so the test declares the machine's fixed
+report layouts to it up front.

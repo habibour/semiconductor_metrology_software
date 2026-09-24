@@ -329,7 +329,7 @@ Mac limits to remember: no Valgrind or GDB on Apple Silicon (use ASan, Instrumen
 | D2 | Tue 22 Sep | Scan, processing, controller, alarms, exports, CLI; tag v0.1 | not started |
 | D3 | Wed 23 Sep | Qt panel, wafer map, control modes; README draft | done Thu 24 Sep and committed locally, not pushed; first GIF not recorded, CI not confirmed, sanitizers not runnable on this Mac; cassette loop deferred to Day 6 |
 | D4 | Thu 24 Sep | SECS-II codec, fuzz tests, HSMS framing and timers | code done and committed locally, not pushed; UT-CODEC and UT-HSMS pass on this Mac; CI, sanitizers and the `TODO(verify)` protocol values unconfirmed |
-| D5 | Fri 25 Sep | GEM module, host simulator, scenarios, interop; tag v0.2 | not started |
+| D5 | Fri 25 Sep | GEM module, integration into the app as a separate step, host_sim and scenarios, interop test | done Thu 24 Sep and committed locally: GEM layer, `serve`, host_sim, 7 scenarios pass, XT-SECSGEM-1 passes (15/15) on this Mac; ST-cassette_run deferred (no cassette loop); CI not green (Ubuntu test fails, cause not yet seen), tag v0.2 not placed |
 | D6 | Sat 26 Sep | Refactor, sanitizer fixes, ring buffer and benchmarks, Octave check, Docker demo; tag v0.3 | not started |
 | D7 | Sun 27 Sep | README and video final, CV final, submit | not started |
 

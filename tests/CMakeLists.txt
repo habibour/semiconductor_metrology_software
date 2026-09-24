@@ -85,6 +85,38 @@ if(SSIM_ENABLE_SECSGEM)
     ssim_add_unit_test(ssim_hostsim_pattern_test SOURCES unit/host_sim/pattern_test.cpp LIBS ssim_hostsim)
     ssim_add_unit_test(ssim_hostsim_script_test SOURCES unit/host_sim/script_test.cpp LIBS ssim_hostsim)
 
+    # XT-SECSGEM-1 (FR-TOOL-2): an independent open-source host (the Python
+    # `secsgem` library) talks to a real `equipment_cli serve`. Registered only
+    # when the chosen Python can import secsgem, and it says so when it cannot,
+    # so a missing library is visible instead of a silent skip.
+    #   pip install secsgem==0.3.0
+    #   cmake ... -DSSIM_INTEROP_PYTHON=/path/to/python-with-secsgem
+    set(SSIM_INTEROP_PYTHON "" CACHE FILEPATH "Python with the secsgem package, for the XT-SECSGEM-1 interop test")
+    if(NOT SSIM_INTEROP_PYTHON)
+        find_package(Python3 COMPONENTS Interpreter QUIET)
+        if(Python3_FOUND)
+            set(SSIM_INTEROP_PYTHON "${Python3_EXECUTABLE}")
+        endif()
+    endif()
+    set(_ssim_have_secsgem_py FALSE)
+    if(SSIM_INTEROP_PYTHON)
+        execute_process(COMMAND "${SSIM_INTEROP_PYTHON}" -c "import secsgem"
+                        RESULT_VARIABLE _ssim_secsgem_rc OUTPUT_QUIET ERROR_QUIET)
+        if(_ssim_secsgem_rc EQUAL 0)
+            set(_ssim_have_secsgem_py TRUE)
+        endif()
+    endif()
+    if(_ssim_have_secsgem_py)
+        add_test(NAME XT-SECSGEM-1
+                 COMMAND "${SSIM_INTEROP_PYTHON}" "${CMAKE_SOURCE_DIR}/scripts/interop_secsgem.py"
+                         --cli $<TARGET_FILE:equipment_cli>
+                         --config "${CMAKE_SOURCE_DIR}/config/demo_alarm.json")
+        set_tests_properties(XT-SECSGEM-1 PROPERTIES TIMEOUT 300)
+    else()
+        message(STATUS "XT-SECSGEM-1 is NOT registered: no Python with the secsgem package "
+                       "(pip install secsgem==0.3.0, then -DSSIM_INTEROP_PYTHON=<python>)")
+    endif()
+
     # Scenario tests: real machine, real socket, the actual scenarios/*.scn files.
     add_executable(ssim_scenario_test scenario/scenario_test.cpp)
     target_link_libraries(ssim_scenario_test PRIVATE GTest::gtest_main ssim_hostsim ssim_machine)

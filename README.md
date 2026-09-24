@@ -3,12 +3,15 @@
 A simulator of a cassette-to-cassette wafer film-stress metrology tool, written
 as a portfolio project in C++17.
 
-**Status: work in progress (draft README, Day 4 of 7).** The standalone machine,
-the headless CLI and the Qt operator panel work. The SECS/GEM module has its
-lowest two layers so far: a SECS-II item codec and an HSMS session with a
-loopback server. The GEM behaviour (events, alarms, remote commands), the host
-simulator, interop, benchmarks and the demo video do not exist yet, and this
-README does not claim them.
+**Status: work in progress (draft README, Day 5 of 7).** The standalone machine,
+the headless CLI and the Qt operator panel work. The optional SECS/GEM module
+is built as a subset of publicly documented behaviour (SECS-II codec, HSMS
+session and server, GEM communication and control states, remote commands,
+events, alarms, status variables, S9 errors) with a scripted host simulator, seven
+scenario scripts and an interop test against an independent open-source host.
+Not done yet: the cassette loop, equipment constants and dynamic reports,
+benchmarks, the Docker demo and the demo video. This README claims nothing
+about those. It is not a certified or complete GEM implementation.
 
 ## What it is, in plain English
 
@@ -86,6 +89,25 @@ Notes from the machine this was developed on:
   `-DCMAKE_OSX_ARCHITECTURES=arm64` for anything that links arm64 libraries
   (the `qt` preset already does).
 
+### Running the machine with a host
+
+```
+# the machine, listening on a port chosen by the OS (loopback only), Online-Remote
+./build/src/app_cli/equipment_cli serve --port 0 --control remote --rtf 0
+# prints:  listening on 127.0.0.1:<port>
+
+# in another terminal: run a scenario script against it
+./build/src/host_sim/host_sim --connect 127.0.0.1:<port> --script scenarios/normal_run.scn
+
+# the independent interop check (needs: pip install secsgem==0.3.0)
+python3 scripts/interop_secsgem.py --cli build/src/app_cli/equipment_cli --config config/demo_alarm.json
+```
+
+The script language is described in `docs/scenario-format.md`. Configure with
+`-DSSIM_INTEROP_PYTHON=<python with secsgem>` to have CTest run the interop
+check as `XT-SECSGEM-1`; without it CTest says at configure time that the test
+is not registered.
+
 ### Using the panel
 
 `config/demo_alarm.json` is set up for a short demo: the first wafer (W001)
@@ -102,23 +124,32 @@ scans cleanly, the second (W002) has an injected sensor-spike fault.
 ## What is verified
 
 Run `ctest` for the current list. At the time of writing the dev build (which
-includes the SECS/GEM module) has 252 passing tests. With
-`-DSSIM_ENABLE_SECSGEM=OFF` the same Day 1 to 3 suite (136 tests) still builds
+includes the SECS/GEM module) has 336 passing tests. With
+`-DSSIM_ENABLE_SECSGEM=OFF` the same Day 1 to 3 suite (140 tests) still builds
 and passes, so the machine does not depend on the module. The build with the Qt
 panel adds an offscreen test that clicks through the real window. Only what has
 actually been run is claimed here.
 
-SECS-II and HSMS (this project's own implementation, not a certified or
-complete one): the item codec is tested with known answers, round trips at
-every length boundary, every rejection case, and 100,000 seeded mutated inputs.
-The HSMS session's timers are tested on a fake clock, and the server on
-loopback sockets. Frame and item-header layout was cross-checked against the
-open-source `secsgem` 0.3.0 library; a few values could not be confirmed and
-are marked `TODO(verify)` in `docs/protocol-notes.md`.
+SECS/GEM subset (this project's own implementation):
+
+- The SECS-II codec is tested with known answers, round trips at every length
+  boundary, every rejection case, and 100,000 seeded mutated inputs.
+- The HSMS session's timers T3, T6, T7 and T8 are tested on a fake clock, and
+  the server on loopback sockets.
+- The GEM layer is tested with the real controller and fake sockets (33 tests).
+- Seven scenario scripts (`scenarios/`) run against a real machine over a real
+  socket: normal run, alarm recovery, bad commands, wrong control state,
+  malformed frames, link loss and T3 timeout.
+- **Interop (XT-SECSGEM-1):** the independent Python library `secsgem` 0.3.0,
+  acting as a host, performed S1F13, S1F3 and S2F41 and received S6F11 and S5F1
+  against `equipment_cli serve`: 15 of 15 checks passed, and a run set up to
+  fail did fail. Details and what it does not confirm are in
+  `docs/protocol-notes.md`.
 
 Not verified yet:
 
 - Linux CI is not yet green (a test fails on Ubuntu, see the Actions tab). Windows is out of scope.
+- The cassette-run scenario (ST-cassette_run) does not exist: the cassette loop is not built.
 - ThreadSanitizer and AddressSanitizer/UBSan could not be run on the
   development machine (the sanitizer runtime fails even on an empty program
   there). A sanitizer workflow exists in `.github/workflows/sanitizers.yml` but
@@ -137,8 +168,9 @@ Not verified yet:
 
 ## Known limitations
 
-_To be completed as the project stabilises._ Already known: GEM behaviour is
-not implemented (only the HSMS and SECS-II layers below it); the cassette loop is not implemented; the panel shows raw
+_To be completed as the project stabilises._ Already known: equipment constants
+(S2F13-16) and dynamic reports (S2F33-38) are not implemented and answer S9F5;
+there is no spooling; the communication state model is simplified; the cassette loop is not implemented; the panel shows raw
 heights, so the simulated wafer tilt dominates the map.
 
 ## How to explain this in an interview
