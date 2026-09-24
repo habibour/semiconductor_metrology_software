@@ -20,6 +20,8 @@ ssim_add_unit_test(ssim_core_config_test SOURCES unit/core/config_test.cpp LIBS 
 ssim_add_unit_test(ssim_core_state_machine_test SOURCES unit/core/state_machine_test.cpp LIBS ssim_core)
 ssim_add_unit_test(ssim_core_alarms_test SOURCES unit/core/alarms_test.cpp LIBS ssim_core)
 ssim_add_unit_test(ssim_core_controller_test SOURCES unit/core/controller_test.cpp LIBS ssim_core)
+ssim_add_unit_test(ssim_core_ui_rules_test SOURCES unit/core/ui_rules_test.cpp LIBS ssim_core)
+ssim_add_unit_test(ssim_core_machine_api_test SOURCES unit/core/machine_api_test.cpp LIBS ssim_core)
 
 ssim_add_unit_test(ssim_hw_wafer_model_test SOURCES unit/hw/wafer_model_test.cpp LIBS ssim_hw)
 ssim_add_unit_test(ssim_hw_stage_sim_test SOURCES unit/hw/stage_sim_test.cpp LIBS ssim_hw)

@@ -4,6 +4,8 @@
 
 #include <atomic>
 #include <chrono>
+#include <string>
+#include <vector>
 
 #include "ssim/core/alarms.hpp"
 #include "ssim/core/events.hpp"
@@ -161,6 +163,22 @@ TEST(Controller, StopDuringScanAbortsAndJoinsWithinBudget) {
     EXPECT_TRUE(f.driver.abort_requested.load());
     EXPECT_EQ(f.driver.join_count.load(), 1);
     EXPECT_LT(elapsed, std::chrono::seconds(2));
+}
+
+// PRD §6.5: Stopping -> Idle emits RunAborted (and only then).
+TEST(Controller, RunAbortedIsPublishedWhenTheStopCompletes) {
+    Fixture f;
+    std::vector<std::string> aborted;
+    f.bus.subscribe<RunAborted>([&](const RunAborted& e) { aborted.push_back(e.wafer_id); });
+
+    ASSERT_TRUE(f.controller.submit_command(start(CommandSource::kUi, "W009")));
+    ASSERT_TRUE(f.controller.submit_command(Command{AbortCommand{}, CommandSource::kUi, 2}));
+    EXPECT_TRUE(aborted.empty());  // still Stopping
+
+    f.controller.notify_stage_stopped();
+    ASSERT_EQ(aborted.size(), 1u);
+    EXPECT_EQ(aborted[0], "W009");
+    EXPECT_EQ(f.controller.state(), ProcessState::kIdle);
 }
 
 }  // namespace

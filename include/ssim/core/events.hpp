@@ -37,6 +37,22 @@ struct ScanComplete {
     bool out_of_spec = false;
 };
 
+// Published once per wafer when the analysis pipeline has produced a usable
+// number (never when a quality gate raised an alarm: PRD §6.5, "no result
+// reported"). Fields mirror report 3001 (PRD §8.6.5) so the Day 5 GEM module
+// can reuse it. Plain data on purpose: the wafer map lives in ssim_analysis,
+// which ssim_core may not include, so it travels in a separate ssim_machine
+// event.
+struct WaferResultReady {
+    std::string wafer_id;
+    int slot = 0;
+    double stress_mpa = 0.0;
+    double stress_unc_mpa = 0.0;
+    double curvature_per_m = 0.0;
+    double fit_rms_um = 0.0;
+    bool out_of_spec = false;
+};
+
 struct WaferOutOfSpec {
     std::string wafer_id;
     double stress_mpa = 0.0;

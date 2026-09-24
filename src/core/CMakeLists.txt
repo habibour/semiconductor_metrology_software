@@ -8,6 +8,8 @@ add_library(ssim_core STATIC
     command.cpp
     alarms.cpp
     controller.cpp
+    ui_rules.cpp
+    machine_api.cpp
 )
 
 target_include_directories(ssim_core PUBLIC
