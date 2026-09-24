@@ -12,11 +12,10 @@ namespace ssim::core {
 namespace {
 constexpr std::size_t kInboxCapacity = 256;
 
-// FR-MC-4: Stop/Abort/ClearAlarm are safety commands and are always
-// accepted regardless of control mode or source (PRD §6.5: "Stop and Abort
-// still accepted for safety" even in Online-Remote, where operator Start is
-// disabled). Start and SetControlMode are the two commands the control
-// state model actually gates.
+// FR-MC-4 / PRD 6.5, control state model. The operator (UI, CLI) may always
+// use Stop and Abort, even in Online-Remote where operator Start is disabled
+// (safety). A host command, whatever it is, is only accepted in Online-Remote:
+// in Offline and Online-Local the operator is in charge.
 bool control_allows_start(ControlMode mode, CommandSource source) {
     if (mode == ControlMode::kOnlineRemote) {
         return source == CommandSource::kSecsGem;
@@ -24,11 +23,18 @@ bool control_allows_start(ControlMode mode, CommandSource source) {
     return source != CommandSource::kSecsGem;
 }
 
-bool control_allows_set_mode(CommandSource source) {
-    // Day 5 scope: the host requests Offline/Online via S1F15/S1F17, a
-    // distinct request/ack flow from the operator's direct SetControlMode.
-    // Today only the operator (UI/CLI) may set the mode directly.
-    return source != CommandSource::kSecsGem;
+bool control_allows_host_command(ControlMode mode, CommandSource source) {
+    return source != CommandSource::kSecsGem || mode == ControlMode::kOnlineRemote;
+}
+
+// The operator may set any mode. The host may only take the machine Offline
+// (S1F15) or bring it back Online from Offline (S1F17); switching between
+// Online-Local and Online-Remote is the operator's decision (PRD 6.5).
+bool control_allows_set_mode(ControlMode requested, ControlMode current, CommandSource source) {
+    if (source != CommandSource::kSecsGem) {
+        return true;
+    }
+    return requested == ControlMode::kOffline || current == ControlMode::kOffline;
 }
 }  // namespace
 
@@ -98,8 +104,16 @@ Result<ProcessState> Controller::handle_command(const Command& command) {
                 }
                 return result;
             } else if constexpr (std::is_same_v<T, StopCommand>) {
+                if (!control_allows_host_command(control_mode_.load(), command.source)) {
+                    return Result<ProcessState>::err(
+                        Error{kReasonControlStateDenied, "host commands need Online-Remote"});
+                }
                 return transition(ProcessTrigger::kStop, {});
             } else if constexpr (std::is_same_v<T, AbortCommand>) {
+                if (!control_allows_host_command(control_mode_.load(), command.source)) {
+                    return Result<ProcessState>::err(
+                        Error{kReasonControlStateDenied, "host commands need Online-Remote"});
+                }
                 auto result = transition(ProcessTrigger::kAbort, {});
                 if (result) {
                     scan_driver_.request_abort();
@@ -111,6 +125,10 @@ Result<ProcessState> Controller::handle_command(const Command& command) {
                 // tracking yet) and clears every active alarm, since the
                 // FSM has one aggregate Alarm state rather than one per
                 // ALID.
+                if (!control_allows_host_command(control_mode_.load(), command.source)) {
+                    return Result<ProcessState>::err(
+                        Error{kReasonControlStateDenied, "host commands need Online-Remote"});
+                }
                 TransitionGuards guards;
                 guards.alarm_cause_cleared = true;
                 auto result = transition(ProcessTrigger::kClearAlarm, guards);
@@ -120,7 +138,7 @@ Result<ProcessState> Controller::handle_command(const Command& command) {
                 }
                 return result;
             } else if constexpr (std::is_same_v<T, SetControlModeCommand>) {
-                if (!control_allows_set_mode(command.source)) {
+                if (!control_allows_set_mode(payload.mode, control_mode_.load(), command.source)) {
                     return Result<ProcessState>::err(
                         Error{kReasonControlStateDenied, "SetControlMode denied for this source"});
                 }

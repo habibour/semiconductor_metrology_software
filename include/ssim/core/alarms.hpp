@@ -13,6 +13,7 @@
 // alarm, or clear() for an already-inactive one, does nothing and
 // publishes nothing — each set/clear transition is announced exactly once.
 
+#include <cstddef>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -49,6 +50,7 @@ public:
     void clear_all();
 
     bool any_active() const;
+    std::size_t active_count() const;
     bool is_active(AlarmId id) const;
 
 private:

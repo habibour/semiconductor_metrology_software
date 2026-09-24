@@ -54,4 +54,18 @@ TEST(AlarmManager, ClearAllClearsEveryActiveAlarm) {
 }
 
 }  // namespace
+TEST(AlarmManager, ActiveCountFollowsSetAndClear) {
+    EventBus bus;
+    AlarmManager alarms(bus);
+    EXPECT_EQ(alarms.active_count(), 0u);
+    alarms.set(AlarmId::kScanStall, "a");
+    alarms.set(AlarmId::kSensorDropout, "b");
+    alarms.set(AlarmId::kScanStall, "again");  // already active: not counted twice
+    EXPECT_EQ(alarms.active_count(), 2u);
+    alarms.clear(AlarmId::kScanStall);
+    EXPECT_EQ(alarms.active_count(), 1u);
+    alarms.clear_all();
+    EXPECT_EQ(alarms.active_count(), 0u);
+}
+
 }  // namespace ssim::core

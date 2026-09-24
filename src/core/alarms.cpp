@@ -72,6 +72,11 @@ bool AlarmManager::any_active() const {
     return !active_.empty();
 }
 
+std::size_t AlarmManager::active_count() const {
+    std::lock_guard lock(mutex_);
+    return active_.size();
+}
+
 bool AlarmManager::is_active(AlarmId id) const {
     std::lock_guard lock(mutex_);
     return active_.find(static_cast<int>(id)) != active_.end();

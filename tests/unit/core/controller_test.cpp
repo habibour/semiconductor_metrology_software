@@ -93,12 +93,54 @@ TEST(Controller, StopAndAbortAlwaysAcceptedRegardlessOfSourceOrMode) {
     EXPECT_TRUE(f.driver.abort_requested.load());
 }
 
-TEST(Controller, SecsGemCannotSetControlMode) {
+// S1F15 / S1F17 (PRD 6.5): the host can take the machine Offline and bring it
+// back Online from Offline, but cannot switch between Online-Local and
+// Online-Remote; that stays with the operator.
+TEST(Controller, SecsGemCanGoOfflineAndBackOnlineButNotSwitchBetweenOnlineModes) {
+    Fixture f;  // starts Online-Local
+    auto set = [&](ControlMode m) {
+        return f.controller.submit_command(
+            Command{SetControlModeCommand{m}, CommandSource::kSecsGem, 1});
+    };
+    ASSERT_TRUE(set(ControlMode::kOffline));
+    EXPECT_EQ(f.controller.control_mode(), ControlMode::kOffline);
+    ASSERT_TRUE(set(ControlMode::kOnlineRemote));
+    EXPECT_EQ(f.controller.control_mode(), ControlMode::kOnlineRemote);
+
+    auto denied = set(ControlMode::kOnlineLocal);  // Remote -> Local is the operator's call
+    ASSERT_FALSE(denied);
+    EXPECT_EQ(denied.error().code, kReasonControlStateDenied);
+    EXPECT_EQ(f.controller.control_mode(), ControlMode::kOnlineRemote);
+}
+
+TEST(Controller, HostStopAbortAndClearAlarmAreRefusedOutsideOnlineRemote) {
+    Fixture f;  // Online-Local
+    ASSERT_TRUE(f.controller.submit_command(start(CommandSource::kUi)));
+
+    auto stop = f.controller.submit_command(Command{StopCommand{}, CommandSource::kSecsGem, 2});
+    ASSERT_FALSE(stop);
+    EXPECT_EQ(stop.error().code, kReasonControlStateDenied);
+    auto abort = f.controller.submit_command(Command{AbortCommand{}, CommandSource::kSecsGem, 3});
+    ASSERT_FALSE(abort);
+    EXPECT_EQ(abort.error().code, kReasonControlStateDenied);
+    EXPECT_EQ(f.controller.state(), ProcessState::kScanning);  // nothing changed
+
+    f.controller.notify_fault(AlarmId::kScanStall, "test");
+    ASSERT_EQ(f.controller.state(), ProcessState::kAlarm);
+    auto clear =
+        f.controller.submit_command(Command{ClearAlarmCommand{}, CommandSource::kSecsGem, 4});
+    ASSERT_FALSE(clear);
+    EXPECT_EQ(clear.error().code, kReasonControlStateDenied);
+    EXPECT_TRUE(f.controller.submit_command(Command{ClearAlarmCommand{}, CommandSource::kUi, 5}));
+}
+
+TEST(Controller, HostStopAbortAndClearAlarmAreAcceptedInOnlineRemote) {
     Fixture f;
-    auto result = f.controller.submit_command(
-        Command{SetControlModeCommand{ControlMode::kOffline}, CommandSource::kSecsGem, 1});
-    ASSERT_FALSE(result);
-    EXPECT_EQ(result.error().code, kReasonControlStateDenied);
+    ASSERT_TRUE(f.controller.submit_command(
+        Command{SetControlModeCommand{ControlMode::kOnlineRemote}, CommandSource::kUi, 1}));
+    ASSERT_TRUE(f.controller.submit_command(start(CommandSource::kSecsGem)));
+    EXPECT_TRUE(f.controller.submit_command(Command{StopCommand{}, CommandSource::kSecsGem, 2}));
+    EXPECT_TRUE(f.controller.submit_command(Command{AbortCommand{}, CommandSource::kSecsGem, 3}));
 }
 
 TEST(Controller, NotifyScanCompleteDrivesScanningToProcessing) {
