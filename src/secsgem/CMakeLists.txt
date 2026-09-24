@@ -6,6 +6,8 @@ find_package(Threads REQUIRED)
 add_library(ssim_secsgem STATIC
     secs2/item.cpp
     secs2/codec.cpp
+    secs2/text_dump.cpp
+    secs2/message_factory.cpp
 )
 
 target_include_directories(ssim_secsgem PUBLIC
