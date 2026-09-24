@@ -15,5 +15,12 @@ function(ssim_apply_sanitizers target)
     else()
         target_compile_options(${target} PRIVATE -fsanitize=${SSIM_SANITIZER} -fno-omit-frame-pointer -g)
         target_link_options(${target} PRIVATE -fsanitize=${SSIM_SANITIZER})
+        # GCC warns (-Wtsan) about std::atomic_thread_fence, which ThreadSanitizer
+        # does not model; Asio's headers use it and it is inlined into our code.
+        # It is a note about possible false positives, not a defect here, and
+        # -Werror would otherwise fail the whole TSan build. Warnings stay on.
+        if(SSIM_SANITIZER MATCHES "thread" AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            target_compile_options(${target} PRIVATE -Wno-error=tsan)
+        endif()
     endif()
 endfunction()

@@ -10,10 +10,10 @@
 //   A[*]   U4[*]   L[*]   *                          wildcards (patterns only)
 //
 // A list holds its items separated by white space; an array holds numbers
-// separated by white space or commas; a string is A"..." with \" and \\
-// escapes. `L[*]` is any list, `T[*]` any item of type T (any count), and a
-// bare `*` any item at all. Lists otherwise match by exact length and item by
-// item. Wildcards are only legal in patterns; parse_item() rejects them.
+// separated by white space or commas; a string is A"..." in which a quote and
+// a backslash are escaped with a backslash. `L[*]` is any list, `T[*]` any item of type T (any
+// count), and a bare `*` any item at all. Lists otherwise match by exact length and item by item.
+// Wildcards are only legal in patterns; parse_item() rejects them.
 
 #include <string_view>
 #include <vector>

@@ -28,6 +28,9 @@ private:
     const IStage& stage_;
     const WaferModel& wafer_model_;
     std::mt19937_64 rng_;
+    // std::normal_distribution requires sigma > 0 (libstdc++ asserts on it), so
+    // zero noise is handled here instead of by passing 0 to the distribution.
+    bool noisy_;
     std::normal_distribution<double> noise_;
 };
 

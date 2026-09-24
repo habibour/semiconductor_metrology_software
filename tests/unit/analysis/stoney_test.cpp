@@ -42,7 +42,9 @@ double recover_stress_mpa(const ssim::core::WaferConfig& cfg, double noise_sigma
     const int n_points = static_cast<int>(cfg.diameter_mm * kPointsPerMm) + 1;
 
     std::mt19937_64 rng(noise_seed);
-    std::normal_distribution<double> noise(0.0, noise_sigma_m);
+    // normal_distribution requires sigma > 0, so zero noise draws nothing.
+    std::normal_distribution<double> noise(0.0, noise_sigma_m > 0.0 ? noise_sigma_m : 1.0);
+    const bool noisy = noise_sigma_m > 0.0;
 
     std::vector<LineFitResult> fits;
     for (int line = 0; line < kLines; ++line) {
@@ -52,7 +54,7 @@ double recover_stress_mpa(const ssim::core::WaferConfig& cfg, double noise_sigma
         for (int p = 0; p < n_points; ++p) {
             const double s = -radius_m + 2.0 * radius_m * static_cast<double>(p) / (n_points - 1);
             raw.s_m.push_back(s);
-            raw.z_m.push_back(model.height_m(theta, s) + noise(rng));
+            raw.z_m.push_back(model.height_m(theta, s) + (noisy ? noise(rng) : 0.0));
         }
         auto filtered = apply_edge_exclusion(raw, /*edge_exclusion_mm=*/3.0);
         filtered = apply_outlier_rejection(filtered, /*mad_k=*/6.0);

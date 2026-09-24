@@ -12,10 +12,12 @@ FilterResult make_parabola(double a, double b, double c, int n, double half_span
                            double noise_sigma_m = 0.0, std::uint64_t seed = 1) {
     FilterResult result;
     std::mt19937_64 rng(seed);
-    std::normal_distribution<double> noise(0.0, noise_sigma_m);
+    // normal_distribution requires sigma > 0, so zero noise draws nothing.
+    std::normal_distribution<double> noise(0.0, noise_sigma_m > 0.0 ? noise_sigma_m : 1.0);
+    const bool noisy = noise_sigma_m > 0.0;
     for (int i = 0; i < n; ++i) {
         const double s = -half_span_m + 2.0 * half_span_m * static_cast<double>(i) / (n - 1);
-        const double z = a * s * s + b * s + c + noise(rng);
+        const double z = a * s * s + b * s + c + (noisy ? noise(rng) : 0.0);
         result.samples.push_back(FilteredSample{s, z, SampleFlag::kKept});
     }
     return result;

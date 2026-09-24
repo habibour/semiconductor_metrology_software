@@ -48,7 +48,9 @@ TEST(ParseItem, BadInputIsAnErrorWithAPosition) {
           "A\"bad \\n escape\"", "U4[99999999999]"}) {
         auto r = parse_item(bad);
         EXPECT_FALSE(r) << "accepted: " << bad;
-        if (!r) EXPECT_EQ(r.error().code, kErrPatternSyntax) << bad;
+        if (!r) {
+            EXPECT_EQ(r.error().code, kErrPatternSyntax) << bad;
+        }
     }
 }
 
