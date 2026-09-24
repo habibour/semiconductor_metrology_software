@@ -8,7 +8,8 @@
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "SSIM_BUILD_TESTS": "ON"
+                "SSIM_BUILD_TESTS": "ON",
+                "SSIM_ENABLE_SECSGEM": "ON"
             }
         },
         {

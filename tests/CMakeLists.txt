@@ -67,3 +67,10 @@ if(SSIM_BUILD_QT)
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
         TIMEOUT 120)
 endif()
+
+# SECS/GEM module tests (only when the module is built).
+if(SSIM_ENABLE_SECSGEM)
+    ssim_add_unit_test(ssim_secs2_codec_roundtrip_test SOURCES unit/secsgem/secs2/codec_roundtrip_test.cpp LIBS ssim_secsgem)
+    ssim_add_unit_test(ssim_secs2_codec_reject_test SOURCES unit/secsgem/secs2/codec_reject_test.cpp LIBS ssim_secsgem)
+    ssim_add_unit_test(ssim_secs2_codec_fuzz_test SOURCES unit/secsgem/secs2/codec_fuzz_test.cpp LIBS ssim_secsgem)
+endif()
