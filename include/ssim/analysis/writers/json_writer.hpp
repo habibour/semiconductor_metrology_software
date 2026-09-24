@@ -28,7 +28,7 @@ struct WaferRunMeta {
 };
 
 ssim::core::Result<std::filesystem::path> write_json_summary(const std::filesystem::path& wafer_dir,
-                                                              const PipelineResult& result,
-                                                              const WaferRunMeta& meta);
+                                                             const PipelineResult& result,
+                                                             const WaferRunMeta& meta);
 
 }  // namespace ssim::analysis

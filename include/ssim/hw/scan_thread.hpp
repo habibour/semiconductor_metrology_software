@@ -37,11 +37,12 @@ namespace ssim::hw {
 class ScanThread final : public ssim::core::IScanDriver {
 public:
     ScanThread(IStage& stage, ILaserSensor& laser, const WaferModel& wafer_model,
-              ssim::core::ScanConfig scan_config, std::vector<ssim::core::FaultConfig> fault_configs,
-              ssim::core::BoundedQueue<ssim::core::SampleBlock>& sample_queue,
-              ssim::core::EventBus& bus, ssim::core::AlarmManager& alarms,
-              std::function<void(std::string)> on_lines_complete,
-              std::function<void()> on_stopped);
+               ssim::core::ScanConfig scan_config,
+               std::vector<ssim::core::FaultConfig> fault_configs,
+               ssim::core::BoundedQueue<ssim::core::SampleBlock>& sample_queue,
+               ssim::core::EventBus& bus, ssim::core::AlarmManager& alarms,
+               std::function<void(std::string)> on_lines_complete,
+               std::function<void()> on_stopped);
     ~ScanThread() override;
 
     ScanThread(const ScanThread&) = delete;

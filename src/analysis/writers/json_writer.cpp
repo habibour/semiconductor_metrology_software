@@ -1,7 +1,6 @@
 #include "ssim/analysis/writers/json_writer.hpp"
 
 #include <fstream>
-
 #include <nlohmann/json.hpp>
 
 namespace ssim::analysis {
@@ -11,8 +10,8 @@ constexpr double kPaToMpa = 1e-6;
 }  // namespace
 
 ssim::core::Result<std::filesystem::path> write_json_summary(const std::filesystem::path& wafer_dir,
-                                                              const PipelineResult& result,
-                                                              const WaferRunMeta& meta) {
+                                                             const PipelineResult& result,
+                                                             const WaferRunMeta& meta) {
     const std::filesystem::path path = wafer_dir / "summary.json";
     if (std::filesystem::exists(path)) {
         return ssim::core::Result<std::filesystem::path>::err(

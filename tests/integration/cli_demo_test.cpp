@@ -8,10 +8,9 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <thread>
-
-#include <nlohmann/json.hpp>
 
 #ifndef EQUIPMENT_CLI_PATH
 #error "EQUIPMENT_CLI_PATH must be defined by CMake"
@@ -23,9 +22,9 @@ class CliDemo : public ::testing::Test {
 protected:
     void SetUp() override {
         out_dir_ = std::filesystem::temp_directory_path() /
-                  ("ssim_cli_demo_test_" +
-                   std::to_string(::testing::UnitTest::GetInstance()->random_seed()) + "_" +
-                   ::testing::UnitTest::GetInstance()->current_test_info()->name());
+                   ("ssim_cli_demo_test_" +
+                    std::to_string(::testing::UnitTest::GetInstance()->random_seed()) + "_" +
+                    ::testing::UnitTest::GetInstance()->current_test_info()->name());
         std::filesystem::remove_all(out_dir_);
     }
     void TearDown() override { std::filesystem::remove_all(out_dir_); }

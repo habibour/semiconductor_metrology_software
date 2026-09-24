@@ -82,15 +82,15 @@ Result<ProcessState> ProcessStateMachine::apply(ProcessTrigger trigger,
                     return Result<ProcessState>::ok(state_);
                 default:
                     return reject(kReasonIllegalTransition,
-                                 "Scanning only accepts LinesComplete, Stop, Abort, Fault");
+                                  "Scanning only accepts LinesComplete, Stop, Abort, Fault");
             }
         }
         case ProcessState::kProcessing: {
             switch (trigger) {
                 case ProcessTrigger::kResultReady:
                     state_ = (guards.more_wafers_pending && !stop_after_wafer_)
-                                ? ProcessState::kScanning
-                                : ProcessState::kIdle;
+                                 ? ProcessState::kScanning
+                                 : ProcessState::kIdle;
                     if (state_ == ProcessState::kIdle) {
                         stop_after_wafer_ = false;
                     }
@@ -103,7 +103,7 @@ Result<ProcessState> ProcessStateMachine::apply(ProcessTrigger trigger,
                     return Result<ProcessState>::ok(state_);
                 default:
                     return reject(kReasonIllegalTransition,
-                                 "Processing only accepts ResultReady, Fault, Abort");
+                                  "Processing only accepts ResultReady, Fault, Abort");
             }
         }
         case ProcessState::kAlarm: {

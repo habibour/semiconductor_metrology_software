@@ -21,8 +21,8 @@ std::string format_or_blank(double value) {
 }  // namespace
 
 ssim::core::Result<std::filesystem::path> write_line_csv(const std::filesystem::path& wafer_dir,
-                                                          const std::string& wafer_id,
-                                                          const PipelineResult& result) {
+                                                         const std::string& wafer_id,
+                                                         const PipelineResult& result) {
     const std::filesystem::path path = wafer_dir / "lines.csv";
     if (std::filesystem::exists(path)) {
         return ssim::core::Result<std::filesystem::path>::err(
@@ -35,12 +35,13 @@ ssim::core::Result<std::filesystem::path> write_line_csv(const std::filesystem::
     }
 
     out << "wafer_id,line_index,angle_deg,n_samples,n_removed,curvature_1_per_m,radius_m,"
-          "se_curvature,rms_um,tilt_um_per_mm,offset_um\n";
+           "se_curvature,rms_um,tilt_um_per_mm,offset_um\n";
     for (std::size_t i = 0; i < result.line_fits.size(); ++i) {
         const LineFitResult& fit = result.line_fits[i];
         const FilterResult& filtered = result.filtered_lines[i];
-        const double radius_m = fit.curvature_per_m != 0.0 ? 1.0 / fit.curvature_per_m
-                                                            : std::numeric_limits<double>::infinity();
+        const double radius_m = fit.curvature_per_m != 0.0
+                                    ? 1.0 / fit.curvature_per_m
+                                    : std::numeric_limits<double>::infinity();
         out << wafer_id << ',' << i << ',' << (fit.angle_rad * kRadToDeg) << ','
             << filtered.samples.size() << ',' << filtered.removed_count << ','
             << fit.curvature_per_m << ',' << format_or_blank(radius_m) << ','
@@ -51,9 +52,9 @@ ssim::core::Result<std::filesystem::path> write_line_csv(const std::filesystem::
 }
 
 ssim::core::Result<std::filesystem::path> write_sample_csv(const std::filesystem::path& wafer_dir,
-                                                            const std::string& wafer_id,
-                                                            const PipelineResult& result,
-                                                            int decimation) {
+                                                           const std::string& wafer_id,
+                                                           const PipelineResult& result,
+                                                           int decimation) {
     const std::filesystem::path path = wafer_dir / "samples.csv";
     if (std::filesystem::exists(path)) {
         return ssim::core::Result<std::filesystem::path>::err(

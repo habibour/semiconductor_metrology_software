@@ -16,8 +16,8 @@ struct NormalEquations {
 
 double det3(const double m[3][3]) {
     return m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
-          m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
-          m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+           m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
+           m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
 }
 
 // Cramer's rule: replaces column `col` of m with rhs and returns det/det(m).

@@ -15,8 +15,7 @@
 
 namespace ssim::analysis {
 
-ssim::core::Result<std::filesystem::path> write_wafer_map_png(const std::filesystem::path& wafer_dir,
-                                                               const WaferMap& map,
-                                                               double edge_exclusion_mm);
+ssim::core::Result<std::filesystem::path> write_wafer_map_png(
+    const std::filesystem::path& wafer_dir, const WaferMap& map, double edge_exclusion_mm);
 
 }  // namespace ssim::analysis

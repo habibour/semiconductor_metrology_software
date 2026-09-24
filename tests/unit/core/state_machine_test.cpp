@@ -1,6 +1,6 @@
-#include "ssim/core/process_state_machine.hpp"
-
 #include <gtest/gtest.h>
+
+#include "ssim/core/process_state_machine.hpp"
 
 namespace ssim::core {
 namespace {

@@ -143,17 +143,17 @@ TEST(ScanThread, AbortMidScanStopsPromptlyAndCallsOnStopped) {
     // f.stage) — this test only exercises abort mechanics/timing, not
     // sensor data fidelity.
     LaserSensorSim hooked_laser(*hooked_stage, f.wafer_model, 0.5e-6, f.wafer_model.seed());
-    ScanThread scan(*hooked_stage, hooked_laser, f.wafer_model, f.scan_config, {}, f.queue, f.bus,
-                    f.alarms,
-                    [&f](std::string wafer_id) {
-                        std::lock_guard lock(f.done_mutex);
-                        f.completed = true;
-                        f.completed_wafer_id = std::move(wafer_id);
-                    },
-                    [&f] {
-                        std::lock_guard lock(f.done_mutex);
-                        f.stopped = true;
-                    });
+    ScanThread scan(
+        *hooked_stage, hooked_laser, f.wafer_model, f.scan_config, {}, f.queue, f.bus, f.alarms,
+        [&f](std::string wafer_id) {
+            std::lock_guard lock(f.done_mutex);
+            f.completed = true;
+            f.completed_wafer_id = std::move(wafer_id);
+        },
+        [&f] {
+            std::lock_guard lock(f.done_mutex);
+            f.stopped = true;
+        });
     hooked_stage->trigger_at = 50;  // well short of a full line's ~1000 points
     hooked_stage->on_trigger = [&scan] { scan.request_abort(); };
 

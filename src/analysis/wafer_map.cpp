@@ -11,7 +11,7 @@ constexpr double kPi = 3.14159265358979323846;
 
 struct DirectedRay {
     double angle_rad;  // in [0, 2*pi)
-    double a, b, c;     // z = a*r^2 + sign*b*r + c, sign already folded into b here
+    double a, b, c;    // z = a*r^2 + sign*b*r + c, sign already folded into b here
 };
 
 double normalize_angle(double theta) {
@@ -20,7 +20,9 @@ double normalize_angle(double theta) {
     return theta;
 }
 
-double eval_ray(const DirectedRay& ray, double r_m) { return ray.a * r_m * r_m + ray.b * r_m + ray.c; }
+double eval_ray(const DirectedRay& ray, double r_m) {
+    return ray.a * r_m * r_m + ray.b * r_m + ray.c;
+}
 }  // namespace
 
 WaferMap build_wafer_map(const std::vector<LineFitResult>& fits, double diameter_m,
@@ -48,7 +50,7 @@ WaferMap build_wafer_map(const std::vector<LineFitResult>& fits, double diameter
         return map;
     }
     std::sort(rays.begin(), rays.end(),
-             [](const DirectedRay& x, const DirectedRay& y) { return x.angle_rad < y.angle_rad; });
+              [](const DirectedRay& x, const DirectedRay& y) { return x.angle_rad < y.angle_rad; });
 
     for (int j = 0; j < map.height; ++j) {
         const double y_mm = (j - half_n) * grid_mm;

@@ -49,7 +49,7 @@ struct LineFitResult {
     double a = 0.0;  // z = a*s^2 + b*s + c
     double b = 0.0;
     double c = 0.0;
-    double curvature_per_m = 0.0;  // 2*a
+    double curvature_per_m = 0.0;     // 2*a
     double se_curvature_per_m = 0.0;  // 2 * standard error of a
     double residual_rms_m = 0.0;
     std::size_t n_used = 0;

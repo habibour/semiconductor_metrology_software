@@ -20,7 +20,7 @@ double stress_uncertainty_pa(const std::vector<LineFitResult>& fits, double biax
     }
     const double se_k_mean = std::sqrt(sum_sq) / static_cast<double>(n);
     return biaxial_modulus_pa * substrate_thickness_m * substrate_thickness_m * se_k_mean /
-          (6.0 * film_thickness_m);
+           (6.0 * film_thickness_m);
 }
 
 }  // namespace ssim::analysis

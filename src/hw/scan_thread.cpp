@@ -66,8 +66,8 @@ ScanThread::~ScanThread() {
 
 void ScanThread::start(std::string wafer_id) {
     abort_requested_.store(false);
-    thread_ = std::thread(
-        [this, wafer_id = std::move(wafer_id)]() mutable { run(std::move(wafer_id)); });
+    thread_ =
+        std::thread([this, wafer_id = std::move(wafer_id)]() mutable { run(std::move(wafer_id)); });
 }
 
 void ScanThread::request_abort() { abort_requested_.store(true); }
@@ -90,14 +90,12 @@ void ScanThread::run(std::string wafer_id) {
         if (!type) {
             continue;
         }
-        injectors.push_back(
-            ActiveFault{FaultInjector(to_fault_spec(fc, *type), wafer_model_.seed()),
-                       fc.stall_duration_s});
+        injectors.push_back(ActiveFault{
+            FaultInjector(to_fault_spec(fc, *type), wafer_model_.seed()), fc.stall_duration_s});
     }
 
     const double radius_m = wafer_model_.truth().diameter_m / 2.0;
-    const int n_points =
-        static_cast<int>(radius_m * 2.0 * 1000.0 * scan_config_.points_per_mm) + 1;
+    const int n_points = static_cast<int>(radius_m * 2.0 * 1000.0 * scan_config_.points_per_mm) + 1;
     const int n_lines = scan_config_.lines;
 
     std::size_t sample_index = 0;
@@ -127,9 +125,9 @@ void ScanThread::run(std::string wafer_id) {
             double height = raw;
             bool dropped = false;
             for (auto& active : injectors) {
-                const auto elapsed_s = std::chrono::duration<double>(std::chrono::steady_clock::now() -
-                                                                      scan_start)
-                                           .count();
+                const auto elapsed_s =
+                    std::chrono::duration<double>(std::chrono::steady_clock::now() - scan_start)
+                        .count();
                 auto sample = active.injector.apply(sample_index, elapsed_s, height);
                 if (!sample.height_m.has_value()) {
                     dropped = true;

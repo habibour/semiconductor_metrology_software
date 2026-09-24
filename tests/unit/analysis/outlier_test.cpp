@@ -1,6 +1,6 @@
-#include "ssim/analysis/outlier_rejection.hpp"
-
 #include <gtest/gtest.h>
+
+#include "ssim/analysis/outlier_rejection.hpp"
 
 namespace ssim::analysis {
 namespace {

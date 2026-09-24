@@ -26,7 +26,7 @@ namespace ssim::analysis {
 
 struct PipelineResult {
     std::vector<FilterResult> filtered_lines;  // for the sample CSV
-    std::vector<LineFitResult> line_fits;       // for the per-line CSV
+    std::vector<LineFitResult> line_fits;      // for the per-line CSV
     CombinedResult combined;
     double stress_pa = 0.0;
     double stress_unc_pa = 0.0;

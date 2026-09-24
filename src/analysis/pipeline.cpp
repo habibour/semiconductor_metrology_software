@@ -69,9 +69,9 @@ PipelineResult run_pipeline(const std::vector<ssim::core::SampleBlock>& lines,
     const double spec_high_pa = config.analysis.stress_spec_high_mpa * kMpaToPa;
     const double plausible_low_pa = config.analysis.stress_plausible_low_mpa * kMpaToPa;
     const double plausible_high_pa = config.analysis.stress_plausible_high_mpa * kMpaToPa;
-    result.quality = evaluate_quality(result.max_fit_rms_m, fit_rms_limit_m, result.stress_pa,
-                                      plausible_low_pa, plausible_high_pa, spec_low_pa,
-                                      spec_high_pa);
+    result.quality =
+        evaluate_quality(result.max_fit_rms_m, fit_rms_limit_m, result.stress_pa, plausible_low_pa,
+                         plausible_high_pa, spec_low_pa, spec_high_pa);
 
     if (result.quality.issue == QualityIssue::kNone) {
         result.map = build_wafer_map(result.line_fits, config.wafer.diameter_mm * 1e-3,

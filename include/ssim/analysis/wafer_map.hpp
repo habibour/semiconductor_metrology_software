@@ -22,7 +22,6 @@ struct WaferMap {
     std::vector<double> heights_m;
 };
 
-WaferMap build_wafer_map(const std::vector<LineFitResult>& fits, double diameter_m,
-                         double grid_mm);
+WaferMap build_wafer_map(const std::vector<LineFitResult>& fits, double diameter_m, double grid_mm);
 
 }  // namespace ssim::analysis

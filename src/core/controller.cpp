@@ -64,7 +64,8 @@ void Controller::run() {
     }
 }
 
-Result<ProcessState> Controller::run_on_controller_thread(std::function<Result<ProcessState>()> fn) {
+Result<ProcessState> Controller::run_on_controller_thread(
+    std::function<Result<ProcessState>()> fn) {
     auto promise = std::make_shared<std::promise<Result<ProcessState>>>();
     std::future<Result<ProcessState>> future = promise->get_future();
     inbox_.push([fn = std::move(fn), promise] { promise->set_value(fn()); });
@@ -134,7 +135,8 @@ Result<ProcessState> Controller::handle_command(const Command& command) {
         command.payload);
 }
 
-Result<ProcessState> Controller::transition(ProcessTrigger trigger, const TransitionGuards& guards) {
+Result<ProcessState> Controller::transition(ProcessTrigger trigger,
+                                            const TransitionGuards& guards) {
     const ProcessState from = fsm_.state();
     Result<ProcessState> result = fsm_.apply(trigger, guards);
     if (result && fsm_.state() != from) {
@@ -145,18 +147,19 @@ Result<ProcessState> Controller::transition(ProcessTrigger trigger, const Transi
 }
 
 void Controller::notify_scan_complete(std::string wafer_id) {
-    (void)run_on_controller_thread([this, wafer_id = std::move(wafer_id)]() -> Result<ProcessState> {
-        bus_.publish(ScanLinesComplete{wafer_id});
-        return transition(ProcessTrigger::kLinesComplete, {});
-    });
+    (void)run_on_controller_thread(
+        [this, wafer_id = std::move(wafer_id)]() -> Result<ProcessState> {
+            bus_.publish(ScanLinesComplete{wafer_id});
+            return transition(ProcessTrigger::kLinesComplete, {});
+        });
 }
 
 void Controller::notify_processing_result(bool out_of_spec, double stress_mpa,
                                           std::optional<AlarmId> raised_alarm_id,
                                           std::string alarm_reason, bool more_wafers_pending) {
     (void)run_on_controller_thread([this, out_of_spec, stress_mpa, raised_alarm_id,
-                              alarm_reason = std::move(alarm_reason),
-                              more_wafers_pending]() -> Result<ProcessState> {
+                                    alarm_reason = std::move(alarm_reason),
+                                    more_wafers_pending]() -> Result<ProcessState> {
         if (raised_alarm_id.has_value()) {
             auto result = transition(ProcessTrigger::kFault, {});
             if (result) {
@@ -184,14 +187,15 @@ void Controller::notify_processing_result(bool out_of_spec, double stress_mpa,
 }
 
 void Controller::notify_fault(AlarmId id, std::string reason) {
-    (void)run_on_controller_thread([this, id, reason = std::move(reason)]() -> Result<ProcessState> {
-        auto result = transition(ProcessTrigger::kFault, {});
-        if (result) {
-            has_active_alarm_.store(true);
-            alarms_.set(id, reason);
-        }
-        return result;
-    });
+    (void)run_on_controller_thread(
+        [this, id, reason = std::move(reason)]() -> Result<ProcessState> {
+            auto result = transition(ProcessTrigger::kFault, {});
+            if (result) {
+                has_active_alarm_.store(true);
+                alarms_.set(id, reason);
+            }
+            return result;
+        });
 }
 
 void Controller::notify_stage_stopped() {

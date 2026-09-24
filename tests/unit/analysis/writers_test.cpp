@@ -3,9 +3,8 @@
 #include <algorithm>
 #include <cmath>
 #include <fstream>
-#include <sstream>
-
 #include <nlohmann/json.hpp>
+#include <sstream>
 
 #include "ssim/analysis/writers/csv_writer.hpp"
 #include "ssim/analysis/writers/json_writer.hpp"
@@ -18,8 +17,9 @@ class Writers : public ::testing::Test {
 protected:
     void SetUp() override {
         dir_ = std::filesystem::temp_directory_path() /
-              ("ssim_writers_test_" + std::to_string(::testing::UnitTest::GetInstance()->random_seed()) +
-               "_" + test_info_name());
+               ("ssim_writers_test_" +
+                std::to_string(::testing::UnitTest::GetInstance()->random_seed()) + "_" +
+                test_info_name());
         std::filesystem::create_directories(dir_);
     }
     void TearDown() override { std::filesystem::remove_all(dir_); }
@@ -63,8 +63,8 @@ protected:
         result.map.height = 3;
         result.map.grid_mm = 100.0;
         result.map.diameter_m = 0.3;
-        result.map.heights_m = {std::nan(""), 1e-6, std::nan(""), 2e-6, 3e-6,
-                                4e-6,          std::nan(""), 5e-6, std::nan("")};
+        result.map.heights_m = {std::nan(""), 1e-6,         std::nan(""), 2e-6,        3e-6,
+                                4e-6,         std::nan(""), 5e-6,         std::nan("")};
         return result;
     }
 

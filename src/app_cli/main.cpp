@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
     auto maybe_opts = parse_args(argc, argv);
     if (!maybe_opts) {
         std::cerr << "usage: equipment_cli [demo] [--config PATH] [--port N] [--seed N] "
-                    "[--rtf X] [--out DIR] [--scenario NAME]\n";
+                     "[--rtf X] [--out DIR] [--scenario NAME]\n";
         return kExitConfigError;
     }
     CliOptions opts = *maybe_opts;
@@ -137,8 +137,8 @@ int main(int argc, char** argv) {
         // now keeps the option surface FR-CLI-1 lists stable; it is not
         // yet wired to anything.
         std::cerr << "note: --scenario is accepted but not yet implemented (Day 4/5 scope); "
-                    "ignoring '"
-                 << *opts.scenario << "'\n";
+                     "ignoring '"
+                  << *opts.scenario << "'\n";
     }
 
     ssim::core::Config config;
@@ -159,7 +159,8 @@ int main(int argc, char** argv) {
     if (opts.out_dir) config.output.dir = *opts.out_dir;
 
     const std::string run_id = make_run_id();
-    const std::string wafer_id = "W001";  // FR-CLI-1 declares no --wafer-id flag; Day 2 runs one wafer.
+    const std::string wafer_id =
+        "W001";  // FR-CLI-1 declares no --wafer-id flag; Day 2 runs one wafer.
     const std::filesystem::path run_dir = std::filesystem::path(config.output.dir) / run_id;
     const std::filesystem::path wafer_dir = run_dir / wafer_id;
 
@@ -167,7 +168,7 @@ int main(int argc, char** argv) {
         // FR-OUT-5: never overwrite an existing run. run_id has one-second
         // resolution, so this is a defensive check, not the expected path.
         std::cerr << "runtime fault: output directory already exists: " << wafer_dir.string()
-                 << "\n";
+                  << "\n";
         return kExitRuntimeFault;
     }
     std::error_code ec;
@@ -192,15 +193,15 @@ int main(int argc, char** argv) {
 
     bus.subscribe<ssim::core::StateChanged>([&logger](const ssim::core::StateChanged& e) {
         logger.log(ssim::core::LogLevel::kInfo, "machine", "state_change",
-                  {{"from", ssim::core::to_string(e.from)}, {"to", ssim::core::to_string(e.to)}});
+                   {{"from", ssim::core::to_string(e.from)}, {"to", ssim::core::to_string(e.to)}});
     });
     bus.subscribe<ssim::core::AlarmSet>([&logger](const ssim::core::AlarmSet& e) {
         logger.log(ssim::core::LogLevel::kWarn, "machine", "alarm_set",
-                  {{"alid", e.alid}, {"name", e.name}, {"reason", e.reason}});
+                   {{"alid", e.alid}, {"name", e.name}, {"reason", e.reason}});
     });
     bus.subscribe<ssim::core::AlarmCleared>([&logger](const ssim::core::AlarmCleared& e) {
         logger.log(ssim::core::LogLevel::kInfo, "machine", "alarm_cleared",
-                  {{"alid", e.alid}, {"name", e.name}});
+                   {{"alid", e.alid}, {"name", e.name}});
     });
 
     std::promise<void> scan_done_promise;
@@ -225,8 +226,8 @@ int main(int argc, char** argv) {
     controller_ptr = &controller;
     controller.start();
 
-    auto start_result = controller.submit_command(
-        ssim::core::Command{ssim::core::StartCommand{wafer_id, 1}, ssim::core::CommandSource::kCli, 1});
+    auto start_result = controller.submit_command(ssim::core::Command{
+        ssim::core::StartCommand{wafer_id, 1}, ssim::core::CommandSource::kCli, 1});
     if (!start_result) {
         std::cerr << "runtime fault: Start rejected: " << start_result.error().message << "\n";
         controller.stop();
@@ -256,12 +257,12 @@ int main(int argc, char** argv) {
     const auto analysis_start = std::chrono::steady_clock::now();
     ssim::analysis::PipelineResult result = ssim::analysis::run_pipeline(lines, config, pool);
     const auto analysis_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                                std::chrono::steady_clock::now() - analysis_start)
-                                .count();
+                                 std::chrono::steady_clock::now() - analysis_start)
+                                 .count();
 
     if (result.outlier_removed_fraction > config.analysis.outlier_fraction_alarm) {
         alarms.set(ssim::core::AlarmId::kSensorSpikeRateHigh,
-                  "removed fraction exceeds outlier_fraction_alarm");
+                   "removed fraction exceeds outlier_fraction_alarm");
     } else {
         alarms.clear(ssim::core::AlarmId::kSensorSpikeRateHigh);
     }
@@ -303,20 +304,21 @@ int main(int argc, char** argv) {
     if (result.quality.issue == ssim::analysis::QualityIssue::kNone) {
         auto line_csv = ssim::analysis::write_line_csv(wafer_dir, wafer_id, result);
         auto sample_csv = ssim::analysis::write_sample_csv(wafer_dir, wafer_id, result,
-                                                            config.output.sample_decimation);
+                                                           config.output.sample_decimation);
         auto png = ssim::analysis::write_wafer_map_png(wafer_dir, result.map,
-                                                        config.scan.edge_exclusion_mm);
+                                                       config.scan.edge_exclusion_mm);
         if (!line_csv || !sample_csv || !png) {
             std::cerr << "runtime fault: one or more output files failed to write\n";
             exit_code = kExitRuntimeFault;
         } else {
             std::cout << "wafer " << wafer_id << ": stress = " << (result.stress_pa * 1e-6)
-                     << " MPa (+/- " << (result.stress_unc_pa * 1e-6) << "), out_of_spec="
-                     << (result.quality.out_of_spec ? "true" : "false") << "\n";
+                      << " MPa (+/- " << (result.stress_unc_pa * 1e-6)
+                      << "), out_of_spec=" << (result.quality.out_of_spec ? "true" : "false")
+                      << "\n";
         }
     } else {
         std::cout << "wafer " << wafer_id << ": alarm raised, no stress number reported ("
-                 << alarm_reason << ")\n";
+                  << alarm_reason << ")\n";
     }
 
     std::cout << "results written to " << wafer_dir.string() << "\n";

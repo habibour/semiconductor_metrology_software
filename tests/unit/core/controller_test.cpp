@@ -84,7 +84,8 @@ TEST(Controller, StopAndAbortAlwaysAcceptedRegardlessOfSourceOrMode) {
         Command{SetControlModeCommand{ControlMode::kOnlineRemote}, CommandSource::kUi, 1}));
     ASSERT_TRUE(f.controller.submit_command(start(CommandSource::kSecsGem)));
 
-    auto abort_result = f.controller.submit_command(Command{AbortCommand{}, CommandSource::kCli, 2});
+    auto abort_result =
+        f.controller.submit_command(Command{AbortCommand{}, CommandSource::kCli, 2});
     ASSERT_TRUE(abort_result);
     EXPECT_EQ(f.controller.state(), ProcessState::kStopping);
     EXPECT_TRUE(f.driver.abort_requested.load());
@@ -139,8 +140,7 @@ TEST(Controller, NotifyProcessingResultWithAlarmDrivesProcessingToAlarmAndBlocks
     EXPECT_FALSE(blocked);
     EXPECT_EQ(blocked.error().code, kReasonIllegalTransition);
 
-    auto cleared =
-        f.controller.submit_command(Command{ClearAlarmCommand{}, CommandSource::kUi, 3});
+    auto cleared = f.controller.submit_command(Command{ClearAlarmCommand{}, CommandSource::kUi, 3});
     ASSERT_TRUE(cleared);
     EXPECT_EQ(f.controller.state(), ProcessState::kIdle);
     EXPECT_FALSE(f.controller.has_active_alarm());

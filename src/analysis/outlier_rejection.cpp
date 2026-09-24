@@ -15,8 +15,7 @@ double median(std::vector<double> values) {
     std::nth_element(values.begin(), values.begin() + static_cast<long>(mid), values.end());
     double m = values[mid];
     if (values.size() % 2 == 0) {
-        std::nth_element(values.begin(), values.begin() + static_cast<long>(mid) - 1,
-                         values.end());
+        std::nth_element(values.begin(), values.begin() + static_cast<long>(mid) - 1, values.end());
         m = 0.5 * (m + values[mid - 1]);
     }
     return m;

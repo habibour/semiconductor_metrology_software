@@ -45,12 +45,12 @@ std::array<unsigned char, 3> diverging_color(double t) {
         b = 1.0 - u;
     }
     return {static_cast<unsigned char>(std::lround(r * 255.0)),
-           static_cast<unsigned char>(std::lround(g * 255.0)),
-           static_cast<unsigned char>(std::lround(b * 255.0))};
+            static_cast<unsigned char>(std::lround(g * 255.0)),
+            static_cast<unsigned char>(std::lround(b * 255.0))};
 }
 
 void put_pixel(std::vector<unsigned char>& pixels, int stride, int x, int y,
-              std::array<unsigned char, 3> rgb) {
+               std::array<unsigned char, 3> rgb) {
     const std::size_t idx = static_cast<std::size_t>(y) * static_cast<std::size_t>(stride) +
                             static_cast<std::size_t>(x) * 3;
     pixels[idx] = rgb[0];
@@ -59,9 +59,8 @@ void put_pixel(std::vector<unsigned char>& pixels, int stride, int x, int y,
 }
 }  // namespace
 
-ssim::core::Result<std::filesystem::path> write_wafer_map_png(const std::filesystem::path& wafer_dir,
-                                                               const WaferMap& map,
-                                                               double edge_exclusion_mm) {
+ssim::core::Result<std::filesystem::path> write_wafer_map_png(
+    const std::filesystem::path& wafer_dir, const WaferMap& map, double edge_exclusion_mm) {
     const std::filesystem::path path = wafer_dir / "wafer_map.png";
     if (std::filesystem::exists(path)) {
         return ssim::core::Result<std::filesystem::path>::err(
@@ -86,9 +85,9 @@ ssim::core::Result<std::filesystem::path> write_wafer_map_png(const std::filesys
     const int width = map.width + kMargin + kColorBarWidth;
     const int height = std::max(map.height, 1);
     const int stride = width * 3;
-    std::vector<unsigned char> pixels(static_cast<std::size_t>(stride) *
-                                      static_cast<std::size_t>(height),
-                                      /*background=*/200);
+    std::vector<unsigned char> pixels(
+        static_cast<std::size_t>(stride) * static_cast<std::size_t>(height),
+        /*background=*/200);
 
     const double radius_mm = map.diameter_m * 1000.0 / 2.0;
     const double half_n = (map.width - 1) / 2.0;
@@ -118,7 +117,8 @@ ssim::core::Result<std::filesystem::path> write_wafer_map_png(const std::filesys
 
     // Colour bar: right-hand strip, top = hi, bottom = lo.
     for (int j = 0; j < height; ++j) {
-        const double t = 1.0 - static_cast<double>(j) / static_cast<double>(std::max(height - 1, 1));
+        const double t =
+            1.0 - static_cast<double>(j) / static_cast<double>(std::max(height - 1, 1));
         const auto rgb = diverging_color(t);
         for (int i = 0; i < kColorBarWidth; ++i) {
             put_pixel(pixels, stride, map.width + kMargin + i, j, rgb);

@@ -39,8 +39,7 @@ struct SetControlModeCommand {
 };
 
 using CommandPayload =
-    std::variant<StartCommand, StopCommand, AbortCommand, ClearAlarmCommand,
-                SetControlModeCommand>;
+    std::variant<StartCommand, StopCommand, AbortCommand, ClearAlarmCommand, SetControlModeCommand>;
 
 struct Command {
     CommandPayload payload;
