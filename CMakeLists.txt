@@ -27,6 +27,7 @@ add_subdirectory(src/analysis)
 add_subdirectory(src/machine)
 if(SSIM_ENABLE_SECSGEM)
     add_subdirectory(src/secsgem)
+    add_subdirectory(src/host_sim)
 endif()
 add_subdirectory(src/app_cli)
 
