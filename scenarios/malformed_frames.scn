@@ -1,0 +1,52 @@
+# ST-malformed_frames: garbage, oversized lengths, wrong device id, unknown
+# stream and function, undecodable bodies. The machine answers with the right
+# S9 message or closes the connection, and keeps running.
+connect 127.0.0.1:$PORT
+select
+send S1F13 L[]
+expect S1F14 *
+
+# S9F1: wrong device id.
+send S1F1 device=99
+expect S9F1 B[*]
+# S9F3: unknown stream.
+send S99F1 L[]
+expect S9F3 B[*]
+# S9F5: known stream, unknown function; equipment constants are not built.
+send S1F99 L[]
+expect S9F5 B[*]
+send S2F13 L[]
+expect S9F5 B[*]
+# S9F7: a body the message does not allow.
+send S1F1 A"no body allowed"
+expect S9F7 B[*]
+# S9F7: a valid frame whose body is not even a well-formed item (S1F13, cut short).
+raw 00 00 00 0D 00 00 81 0D 00 00 00 00 00 63 41 09 61
+expect S9F7 B[*]
+
+# Still alive.
+send S1F1
+expect S1F2 *
+
+# A length below the 10-byte header is a broken frame stream: connection closed.
+raw 00 00 00 05 67 61 72 62 61
+expect-closed timeout=5s
+sleep 1s
+connect 127.0.0.1:$PORT
+select
+send S1F1
+expect S1F2 *
+
+# A length far above the maximum: connection closed, machine still listening.
+raw 7F FF FF FF
+expect-closed timeout=5s
+sleep 1s
+connect 127.0.0.1:$PORT
+
+# Data before Select is refused (Reject.req), never answered.
+send S1F1
+expect-no S1F2 timeout=500ms
+select
+send S1F1
+expect S1F2 *
+disconnect

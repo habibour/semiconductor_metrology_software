@@ -1,0 +1,40 @@
+# ST-wrong_control_state: in Online-Local the operator is in charge and the
+# host cannot command the machine, though it can still take it offline and
+# back. Machine set up: Online-Local.
+connect 127.0.0.1:$PORT
+select
+send S1F13 L[]
+expect S1F14 *
+
+# Control state 1 = Online-Local.
+expect-status 4001 timeout=5s U1[1]
+
+# Every command is HCACK 2 (cannot perform now) and does nothing.
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"W1" ] ] ]
+expect S2F42 L[ B[2] L[] ]
+send S2F41 L[ A"STOP" L[] ]
+expect S2F42 L[ B[2] L[] ]
+send S2F41 L[ A"ABORT" L[] ]
+expect S2F42 L[ B[2] L[] ]
+send S2F41 L[ A"CLEAR_ALARM" L[] ]
+expect S2F42 L[ B[2] L[] ]
+expect-status 4002 timeout=5s U1[0]
+
+# The host requests Offline (S1F15), which is always allowed.
+send S1F15
+expect S1F16 B[0]
+expect-status 4001 timeout=5s U1[0]
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"W1" ] ] ]
+expect S2F42 L[ B[2] L[] ]
+
+# Back online (S1F17): the operator's last mode, Online-Local, so still no commands.
+send S1F17
+expect S1F18 B[0]
+expect-status 4001 timeout=5s U1[1]
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"W1" ] ] ]
+expect S2F42 L[ B[2] L[] ]
+
+# Already online: ONLACK 2.
+send S1F17
+expect S1F18 B[2]
+disconnect

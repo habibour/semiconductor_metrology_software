@@ -84,4 +84,12 @@ if(SSIM_ENABLE_SECSGEM)
     ssim_add_unit_test(ssim_gem_service_test SOURCES unit/secsgem/gem/gem_service_test.cpp LIBS ssim_secsgem)
     ssim_add_unit_test(ssim_hostsim_pattern_test SOURCES unit/host_sim/pattern_test.cpp LIBS ssim_hostsim)
     ssim_add_unit_test(ssim_hostsim_script_test SOURCES unit/host_sim/script_test.cpp LIBS ssim_hostsim)
+
+    # Scenario tests: real machine, real socket, the actual scenarios/*.scn files.
+    add_executable(ssim_scenario_test scenario/scenario_test.cpp)
+    target_link_libraries(ssim_scenario_test PRIVATE GTest::gtest_main ssim_hostsim ssim_machine)
+    target_compile_definitions(ssim_scenario_test PRIVATE SSIM_SCENARIO_DIR="${CMAKE_SOURCE_DIR}/scenarios")
+    ssim_apply_warnings(ssim_scenario_test)
+    ssim_apply_sanitizers(ssim_scenario_test)
+    gtest_discover_tests(ssim_scenario_test DISCOVERY_TIMEOUT 60)
 endif()

@@ -1,0 +1,29 @@
+# ST-link_loss: the host connection drops in the middle of a scan. The machine
+# survives, finishes the scan, keeps the result, and accepts a new host.
+# Machine set up: Online-Remote.
+connect 127.0.0.1:$PORT
+select
+send S1F13 L[]
+expect S1F14 *
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"W001" ] ] ]
+expect S2F42 L[ B[4] L[*] ]
+
+# Drop the link mid-scan. The machine is back to listening within a second.
+disconnect
+sleep 1s
+
+connect 127.0.0.1:$PORT
+select
+send S1F13 L[]
+expect S1F14 *
+
+# The scan finished without a host, and its result was kept.
+expect-status 4012 timeout=60s U4[1]
+expect-status 4006 timeout=10s F4[*]
+
+# Events reach the new host again.
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"W002" ] ] ]
+expect S2F42 L[ B[4] L[*] ]
+wait-event 2005 timeout=60s
+assert event.WAFER_ID == "W002"
+disconnect

@@ -1,0 +1,23 @@
+# ST-t3_timeout: the host never acknowledges an event. The machine's reply
+# timer (T3) expires, it reports S9F9, and carries on. Machine set up:
+# Online-Remote with comm.t3_s = 1.
+connect 127.0.0.1:$PORT
+select
+send S1F13 L[]
+expect S1F14 *
+
+auto-ack off
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"W001" ] ] ]
+expect S2F42 L[ B[4] L[*] ]
+
+# Received, deliberately not acknowledged.
+wait-event 2004 timeout=10s
+
+# One second later the machine gives up waiting: S9F9 with the header it sent.
+expect S9F9 timeout=10s B[*]
+
+# It is fine, and the scan still completes.
+auto-ack on
+wait-event 2005 timeout=60s
+assert event.WAFER_ID == "W001"
+disconnect

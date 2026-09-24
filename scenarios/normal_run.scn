@@ -1,0 +1,30 @@
+# ST-normal_run: the happy path over HSMS. Machine set up: Online-Remote.
+connect 127.0.0.1:$PORT
+select
+
+# Are you there, then establish communications.
+send S1F1
+expect S1F2 L[ A[*] A[*] ]
+send S1F13 L[]
+expect S1F14 L[ B[0] L[ A[*] A[*] ] ]
+
+# Control state 2 = Online-Remote, process state 0 = Idle.
+send S1F3 L[ U4[4001] U4[4002] ]
+expect S1F4 L[ U1[2] U1[0] ]
+
+# Start a wafer; HCACK 4 = accepted, completion comes as events.
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"W042" ] ] ]
+expect S2F42 L[ B[4] L[ L[ A"WAFER_ID" B[0] ] ] ]
+
+wait-event 2004 timeout=10s
+assert event.WAFER_ID == "W042"
+assert event.NUM_LINES == 6
+
+wait-event 2005 timeout=60s
+assert event.WAFER_ID == "W042"
+assert event.STRESS_MPA within -180 +-4
+assert event.OUT_OF_SPEC == false
+
+expect-status 4012 timeout=10s U4[1]
+expect-status 4006 timeout=10s F4[*]
+disconnect

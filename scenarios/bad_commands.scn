@@ -1,0 +1,50 @@
+# ST-bad_commands: every way a remote command can be wrong gets the right
+# HCACK and per-parameter CPACK, and nothing reaches the machine.
+# Machine set up: Online-Remote.
+connect 127.0.0.1:$PORT
+select
+send S1F13 L[]
+expect S1F14 *
+
+# Unknown command: HCACK 1.
+send S2F41 L[ A"REBOOT" L[] ]
+expect S2F42 L[ B[1] L[] ]
+
+# Missing parameter: HCACK 3.
+send S2F41 L[ A"START" L[] ]
+expect S2F42 L[ B[3] L[] ]
+
+# A wafer id that could escape the results folder: HCACK 3, CPACK 2 (illegal value).
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"../../etc/passwd" ] ] ]
+expect S2F42 L[ B[3] L[ L[ A"WAFER_ID" B[2] ] ] ]
+
+# Wrong type: CPACK 3 (illegal format).
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" U4[5] ] ] ]
+expect S2F42 L[ B[3] L[ L[ A"WAFER_ID" B[3] ] ] ]
+
+# Cassette runs are not built yet.
+send S2F41 L[ A"START" L[ L[ A"CASSETTE_ID" A"C001" ] ] ]
+expect S2F42 L[ B[3] L[ L[ A"CASSETTE_ID" B[2] ] ] ]
+
+# An unknown extra parameter: CPACK 1 (unknown name), the good one is still acknowledged.
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"W1" ] L[ A"COLOUR" A"red" ] ] ]
+expect S2F42 L[ B[3] L[ L[ A"WAFER_ID" B[0] ] L[ A"COLOUR" B[1] ] ] ]
+
+# STOP takes no parameters.
+send S2F41 L[ A"STOP" L[ L[ A"NOW" A"yes" ] ] ]
+expect S2F42 L[ B[3] L[ L[ A"NOW" B[1] ] ] ]
+
+# STOP and ABORT with nothing running: HCACK 2.
+send S2F41 L[ A"STOP" L[] ]
+expect S2F42 L[ B[2] L[] ]
+send S2F41 L[ A"ABORT" L[] ]
+expect S2F42 L[ B[2] L[] ]
+
+# A body that is not L2{RCMD, params} at all is illegal data: S9F7.
+send S2F41 A"START"
+expect S9F7 B[*]
+
+# None of it started anything.
+expect-status 4002 timeout=5s U1[0]
+expect-status 4012 timeout=5s U4[0]
+disconnect

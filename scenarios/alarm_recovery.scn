@@ -1,0 +1,38 @@
+# ST-alarm_recovery: a sensor fault raises an alarm, blocks the next scan
+# until cleared, and the rerun succeeds. Machine set up: Online-Remote, with an
+# injected spike fault on wafer W002.
+connect 127.0.0.1:$PORT
+select
+send S1F13 L[]
+expect S1F14 *
+
+# A clean wafer first.
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"W001" ] ] ]
+expect S2F42 L[ B[4] L[*] ]
+wait-event 2005 timeout=60s
+assert event.WAFER_ID == "W001"
+
+# W002 has spikes: alarm 1001 (SensorSpikeRateHigh), no result.
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"W002" ] ] ]
+expect S2F42 L[ B[4] L[*] ]
+wait-alarm 1001 set timeout=60s
+assert alarm.ALID == 1001
+expect-status 4009 timeout=10s U2[1]
+expect-status 4002 timeout=10s U1[3]
+
+# Start is refused while the alarm is active (HCACK 2 = cannot perform now).
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"W003" ] ] ]
+expect S2F42 L[ B[2] L[*] ]
+
+# Clear it; the alarm-cleared report follows and the next scan works.
+send S2F41 L[ A"CLEAR_ALARM" L[] ]
+expect S2F42 L[ B[0] L[] ]
+wait-alarm 1001 clear timeout=10s
+expect-status 4009 timeout=10s U2[0]
+
+send S2F41 L[ A"START" L[ L[ A"WAFER_ID" A"W004" ] ] ]
+expect S2F42 L[ B[4] L[*] ]
+wait-event 2005 timeout=60s
+assert event.WAFER_ID == "W004"
+assert event.STRESS_MPA within -180 +-4
+disconnect
