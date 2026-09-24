@@ -257,9 +257,9 @@ void HsmsServer::stop() {
 
 std::uint16_t HsmsServer::local_port() const { return impl_->port.load(); }
 
-void HsmsServer::post_request(secs2::Message message) {
+void HsmsServer::post_request(secs2::Message message, std::function<void(std::uint32_t)> on_sent) {
     Impl& d = *impl_;
-    asio::post(d.io, [&d, message = std::move(message)] {
+    asio::post(d.io, [&d, message = std::move(message), on_sent = std::move(on_sent)] {
         if (!d.socket.has_value()) {
             d.handler.on_error("request dropped: no host connected");
             return;
@@ -270,8 +270,13 @@ void HsmsServer::post_request(secs2::Message message) {
             d.handler.on_error("request not sent: " + sent.error().message);
         }
         d.apply(out);
+        if (sent && on_sent) {
+            on_sent(sent.value());
+        }
     });
 }
+
+void HsmsServer::post_task(std::function<void()> task) { asio::post(impl_->io, std::move(task)); }
 
 void HsmsServer::post_reply(std::uint32_t system_bytes, secs2::Message message) {
     Impl& d = *impl_;

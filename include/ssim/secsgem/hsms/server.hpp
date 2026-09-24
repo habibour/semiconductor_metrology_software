@@ -25,6 +25,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -32,6 +33,7 @@
 #include "ssim/core/config.hpp"
 #include "ssim/core/result.hpp"
 #include "ssim/secsgem/hsms/handler.hpp"
+#include "ssim/secsgem/hsms/sender.hpp"
 #include "ssim/secsgem/hsms/session.hpp"
 #include "ssim/secsgem/secs2/message.hpp"
 
@@ -50,10 +52,10 @@ struct ServerConfig {
 
 ServerConfig server_config_from(const ssim::core::CommConfig& comm);
 
-class HsmsServer {
+class HsmsServer final : public IMessageSender {
 public:
     HsmsServer(ServerConfig config, ssim::core::IClock& clock, IHsmsHandler& handler);
-    ~HsmsServer();
+    ~HsmsServer() override;
 
     HsmsServer(const HsmsServer&) = delete;
     HsmsServer& operator=(const HsmsServer&) = delete;
@@ -70,8 +72,10 @@ public:
 
     // Sends a message to the connected host, if there is one and it is
     // selected. Failures are reported through IHsmsHandler::on_error.
-    void post_request(secs2::Message message);
-    void post_reply(std::uint32_t system_bytes, secs2::Message message);
+    void post_request(secs2::Message message,
+                      std::function<void(std::uint32_t)> on_sent = {}) override;
+    void post_reply(std::uint32_t system_bytes, secs2::Message message) override;
+    void post_task(std::function<void()> task) override;
 
 private:
     struct Impl;
