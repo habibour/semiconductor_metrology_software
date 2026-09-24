@@ -27,6 +27,11 @@ add_subdirectory(src/analysis)
 add_subdirectory(src/machine)
 add_subdirectory(src/app_cli)
 
+if(SSIM_BUILD_QT)
+    find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent Test)
+    add_subdirectory(src/app_qt)
+endif()
+
 if(SSIM_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)

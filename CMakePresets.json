@@ -12,6 +12,18 @@
             }
         },
         {
+            "name": "qt",
+            "displayName": "Dev with Qt panel (Debug)",
+            "binaryDir": "${sourceDir}/build-qt",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "SSIM_BUILD_TESTS": "ON",
+                "SSIM_BUILD_QT": "ON",
+                "CMAKE_PREFIX_PATH": "/opt/homebrew/opt/qtbase",
+                "CMAKE_OSX_ARCHITECTURES": "arm64"
+            }
+        },
+        {
             "name": "release",
             "displayName": "Release",
             "binaryDir": "${sourceDir}/build-release",

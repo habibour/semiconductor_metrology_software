@@ -53,3 +53,17 @@ ssim_apply_sanitizers(ssim_cli_demo_test)
 gtest_discover_tests(ssim_cli_demo_test)
 
 ssim_add_unit_test(ssim_machine_runtime_test SOURCES integration/machine_runtime_test.cpp LIBS ssim_machine)
+
+# Qt panel smoke test: runs the real window on Qt's offscreen platform, so it
+# needs no display. Only built with -DSSIM_BUILD_QT=ON.
+if(SSIM_BUILD_QT)
+    add_executable(ssim_qt_panel_smoke_test unit/app_qt/panel_smoke_test.cpp)
+    set_target_properties(ssim_qt_panel_smoke_test PROPERTIES AUTOMOC ON)
+    target_link_libraries(ssim_qt_panel_smoke_test PRIVATE ssim_qt_panel Qt6::Test)
+    ssim_apply_warnings(ssim_qt_panel_smoke_test)
+    ssim_apply_sanitizers(ssim_qt_panel_smoke_test)
+    add_test(NAME QtPanelSmoke COMMAND ssim_qt_panel_smoke_test)
+    set_tests_properties(QtPanelSmoke PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+        TIMEOUT 120)
+endif()
