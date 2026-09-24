@@ -77,9 +77,9 @@ header structure only.
 
 ## Day 4 done-checklist (maps back to day-4-spec.md)
 
-- [ ] UT-CODEC-1 and UT-CODEC-2 pass.
-- [ ] UT-HSMS-1 and UT-HSMS-2 pass.
-- [ ] `SSIM_ENABLE_SECSGEM=OFF` build still passes every Day 1–3 test.
-- [ ] Frame/item-header structure cross-checked against `secsgem`; any gaps
-      marked `TODO(verify)`.
-- [ ] No `reinterpret_cast` on wire buffers anywhere in `secsgem/`.
+- [x] UT-CODEC-1 and UT-CODEC-2 pass.
+- [x] UT-HSMS-1 and UT-HSMS-2 pass.
+- [x] `SSIM_ENABLE_SECSGEM=OFF` build still passes every Day 1–3 test.
+- [x] Frame/item-header structure cross-checked against `secsgem`; any gaps
+      marked `TODO(verify)` (see docs/protocol-notes.md).
+- [x] No `reinterpret_cast` on wire buffers anywhere in `secsgem/`.

@@ -3,9 +3,12 @@
 A simulator of a cassette-to-cassette wafer film-stress metrology tool, written
 as a portfolio project in C++17.
 
-**Status: work in progress (draft README, Day 3 of 7).** The standalone machine,
-the headless CLI and the Qt operator panel work. SECS/GEM, benchmarks and the
-demo video do not exist yet, and this README does not claim them.
+**Status: work in progress (draft README, Day 4 of 7).** The standalone machine,
+the headless CLI and the Qt operator panel work. The SECS/GEM module has its
+lowest two layers so far: a SECS-II item codec and an HSMS session with a
+loopback server. The GEM behaviour (events, alarms, remote commands), the host
+simulator, interop, benchmarks and the demo video do not exist yet, and this
+README does not claim them.
 
 ## What it is, in plain English
 
@@ -98,17 +101,29 @@ scans cleanly, the second (W002) has an injected sensor-spike fault.
 
 ## What is verified
 
-Run `ctest` for the current list. At the time of writing the headless suite has
-136 passing tests, and the build with the Qt panel has 137 (it adds an offscreen
-panel test that clicks through the real window). Only what has actually been
-run is claimed here.
+Run `ctest` for the current list. At the time of writing the dev build (which
+includes the SECS/GEM module) has 252 passing tests. With
+`-DSSIM_ENABLE_SECSGEM=OFF` the same Day 1 to 3 suite (136 tests) still builds
+and passes, so the machine does not depend on the module. The build with the Qt
+panel adds an offscreen test that clicks through the real window. Only what has
+actually been run is claimed here.
+
+SECS-II and HSMS (this project's own implementation, not a certified or
+complete one): the item codec is tested with known answers, round trips at
+every length boundary, every rejection case, and 100,000 seeded mutated inputs.
+The HSMS session's timers are tested on a fake clock, and the server on
+loopback sockets. Frame and item-header layout was cross-checked against the
+open-source `secsgem` 0.3.0 library; a few values could not be confirmed and
+are marked `TODO(verify)` in `docs/protocol-notes.md`.
 
 Not verified yet:
 
 - Linux and Windows CI results are not confirmed.
 - ThreadSanitizer and AddressSanitizer/UBSan could not be run on the
   development machine (the sanitizer runtime fails even on an empty program
-  there), so the multithreaded code has not been checked by a sanitizer.
+  there). A sanitizer workflow exists in `.github/workflows/sanitizers.yml` but
+  has not run yet, so the multithreaded code and the codec fuzz test have not
+  been checked by a sanitizer.
 - The first demo GIF has not been recorded.
 
 ## Results
@@ -122,8 +137,8 @@ Not verified yet:
 
 ## Known limitations
 
-_To be completed as the project stabilises._ Already known: SECS/GEM is not
-implemented; the cassette loop is not implemented; the panel shows raw
+_To be completed as the project stabilises._ Already known: GEM behaviour is
+not implemented (only the HSMS and SECS-II layers below it); the cassette loop is not implemented; the panel shows raw
 heights, so the simulated wafer tilt dominates the map.
 
 ## How to explain this in an interview

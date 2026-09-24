@@ -328,7 +328,7 @@ Mac limits to remember: no Valgrind or GDB on Apple Silicon (use ASan, Instrumen
 | D1 | Mon 21 Sep | Skeleton, CI on three systems, core basics, wafer model and simulated hardware, scope frozen | code done, CI not yet confirmed green |
 | D2 | Tue 22 Sep | Scan, processing, controller, alarms, exports, CLI; tag v0.1 | not started |
 | D3 | Wed 23 Sep | Qt panel, wafer map, control modes; README draft | done Thu 24 Sep and committed locally, not pushed; first GIF not recorded, CI not confirmed, sanitizers not runnable on this Mac; cassette loop deferred to Day 6 |
-| D4 | Thu 24 Sep | SECS-II codec, fuzz tests, HSMS framing and timers | not started |
+| D4 | Thu 24 Sep | SECS-II codec, fuzz tests, HSMS framing and timers | code done and committed locally, not pushed; UT-CODEC and UT-HSMS pass on this Mac; CI, sanitizers and the `TODO(verify)` protocol values unconfirmed |
 | D5 | Fri 25 Sep | GEM module, host simulator, scenarios, interop; tag v0.2 | not started |
 | D6 | Sat 26 Sep | Refactor, sanitizer fixes, ring buffer and benchmarks, Octave check, Docker demo; tag v0.3 | not started |
 | D7 | Sun 27 Sep | README and video final, CV final, submit | not started |
