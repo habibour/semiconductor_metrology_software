@@ -51,3 +51,19 @@ Behaviour worth knowing:
 - **Put it in `ssim_core`**: rejected, it breaks the dependency rule.
 - **Refactor `equipment_cli` first**: deferred; it widens the Day 3 diff and
   the CLI already has passing tests.
+
+## Update, 2026-09-24 (Day 5): the optional SECS/GEM link
+
+`MachineRuntime` now also hosts the SECS/GEM link (HSMS server plus GEM
+service), which is how the module is "integrated as a separate step" (PRD 13):
+
+- `ssim_machine` links `ssim_secsgem` only when `SSIM_ENABLE_SECSGEM=ON` and
+  defines `SSIM_HAS_SECSGEM`; the header never includes secsgem or Asio.
+- The link is started by `RuntimeOptions::start_comm` (off by default, so tests
+  and the panel do not open a port unasked) and only if `config.comm.enabled`.
+  `start_comm()` returns an error value if the port cannot be bound.
+- `equipment_cli serve` runs it until SIGINT/SIGTERM and prints the port.
+- Shutdown order: the server stops first, then the worker and controller, and
+  the GEM service is destroyed last, so no bus event reaches a dead service.
+- FR-MC-3 holds both at build time (the machine builds and passes its tests
+  with the option OFF) and at run time (`comm.enabled=false`).

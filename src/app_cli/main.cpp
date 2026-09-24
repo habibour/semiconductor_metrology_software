@@ -5,7 +5,9 @@
 // none of those libraries may depend on each other in that direction
 // (PRD §6.2).
 
+#include <atomic>
 #include <chrono>
+#include <csignal>
 #include <cstdio>
 #include <ctime>
 #include <filesystem>
@@ -14,6 +16,7 @@
 #include <optional>
 #include <string>
 #include <system_error>
+#include <thread>
 #include <vector>
 
 #include "ssim/analysis/fit_pool.hpp"
@@ -32,14 +35,16 @@
 #include "ssim/hw/hardware_factory.hpp"
 #include "ssim/hw/scan_thread.hpp"
 #include "ssim/hw/wafer_model.hpp"
+#include "ssim/machine/machine_runtime.hpp"
 
 namespace {
 
-// FR-CLI-2's fourth code, 4 (interrupted), has no user yet: Day 2 installs
-// no signal handler, so there is nothing that would produce it today.
+// FR-CLI-2's exit codes: 0 success, 2 configuration error, 3 runtime fault,
+// 4 interrupted (serve mode, on SIGINT or SIGTERM).
 constexpr int kExitOk = 0;
 constexpr int kExitConfigError = 2;
 constexpr int kExitRuntimeFault = 3;
+constexpr int kExitInterrupted = 4;
 
 struct CliOptions {
     std::optional<std::string> config_path;
@@ -49,6 +54,8 @@ struct CliOptions {
     std::optional<std::string> out_dir;
     std::optional<std::string> scenario;
     bool demo = false;
+    bool serve = false;
+    std::optional<std::string> control;  // serve mode: offline | local | remote
 };
 
 // FR-CLI-1's declared option surface: --config, --port, --seed, --rtf,
@@ -67,6 +74,12 @@ std::optional<CliOptions> parse_args(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "demo") {
             opts.demo = true;
+        } else if (arg == "serve") {
+            opts.serve = true;
+        } else if (arg == "--control") {
+            auto v = next_value(i);
+            if (!v) return std::nullopt;
+            opts.control = *v;
         } else if (arg == "--config") {
             auto v = next_value(i);
             if (!v) return std::nullopt;
@@ -113,16 +126,99 @@ std::string make_run_id() {
     return std::string(buf);
 }
 
+// Loads the configuration (file, then command-line overrides). Prints the
+// problem and returns nullopt on a configuration error (exit code 2).
+std::optional<ssim::core::Config> build_config(const CliOptions& opts) {
+    ssim::core::Config config;
+    if (opts.config_path) {
+        auto loaded = ssim::core::load_config_file(*opts.config_path);
+        if (!loaded) {
+            std::cerr << "config error: " << loaded.error().message << "\n";
+            return std::nullopt;
+        }
+        for (const auto& warning : loaded.value().warnings) {
+            std::cerr << "config warning: " << warning << "\n";
+        }
+        config = loaded.value().config;
+    }
+    if (opts.port) config.comm.port = *opts.port;
+    if (opts.seed) config.wafer.seed = *opts.seed;
+    if (opts.rtf) config.scan.realtime_factor = *opts.rtf;
+    if (opts.out_dir) config.output.dir = *opts.out_dir;
+    return config;
+}
+
+std::atomic<bool> g_stop_requested{false};
+extern "C" void on_signal(int) { g_stop_requested.store(true); }
+
+// FR-CLI-1 "serve": runs the machine with the optional SECS/GEM link until
+// interrupted. Prints the port actually listening (--port 0 lets the OS pick),
+// so a script or test can connect to it.
+int run_serve(const CliOptions& opts) {
+    auto config = build_config(opts);
+    if (!config) {
+        return kExitConfigError;
+    }
+    ssim::core::ControlMode mode = ssim::core::ControlMode::kOnlineLocal;
+    if (opts.control) {
+        if (*opts.control == "offline") {
+            mode = ssim::core::ControlMode::kOffline;
+        } else if (*opts.control == "local") {
+            mode = ssim::core::ControlMode::kOnlineLocal;
+        } else if (*opts.control == "remote") {
+            mode = ssim::core::ControlMode::kOnlineRemote;
+        } else {
+            std::cerr << "config error: --control must be offline, local or remote\n";
+            return kExitConfigError;
+        }
+    }
+
+    ssim::machine::RuntimeOptions runtime_options;
+    runtime_options.start_comm = true;
+    auto runtime =
+        ssim::machine::MachineRuntime::create(*config, config->output.dir, runtime_options);
+    if (!runtime) {
+        std::cerr << "runtime fault: " << runtime.error().message << "\n";
+        return kExitRuntimeFault;
+    }
+    auto& machine = *runtime.value();
+    if (machine.hsms_port() == 0) {
+        std::cout << "SECS/GEM link is disabled (comm.enabled=false); serving standalone\n";
+    }
+    auto set_mode = machine.api().set_control_mode(mode, ssim::core::CommandSource::kCli);
+    if (!set_mode) {
+        std::cerr << "runtime fault: " << set_mode.error().message << "\n";
+        return kExitRuntimeFault;
+    }
+    if (machine.hsms_port() != 0) {
+        std::cout << "listening on " << config->comm.bind << ":" << machine.hsms_port()
+                  << std::endl;
+    }
+    std::cout << "output in " << machine.run_dir().string() << std::endl;
+
+    std::signal(SIGINT, on_signal);
+    std::signal(SIGTERM, on_signal);
+    while (!g_stop_requested.load()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    std::cout << "interrupted, shutting down\n";
+    return kExitInterrupted;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
     auto maybe_opts = parse_args(argc, argv);
     if (!maybe_opts) {
-        std::cerr << "usage: equipment_cli [demo] [--config PATH] [--port N] [--seed N] "
-                     "[--rtf X] [--out DIR] [--scenario NAME]\n";
+        std::cerr << "usage: equipment_cli [demo|serve] [--config PATH] [--port N] [--seed N] "
+                     "[--rtf X] [--out DIR] [--scenario NAME] [--control offline|local|remote]\n";
         return kExitConfigError;
     }
     CliOptions opts = *maybe_opts;
+
+    if (opts.serve) {
+        return run_serve(opts);
+    }
 
     if (opts.demo) {
         // FR-CLI-3 describes demo mode as running "against a local host
@@ -141,22 +237,11 @@ int main(int argc, char** argv) {
                   << *opts.scenario << "'\n";
     }
 
-    ssim::core::Config config;
-    if (opts.config_path) {
-        auto loaded = ssim::core::load_config_file(*opts.config_path);
-        if (!loaded) {
-            std::cerr << "config error: " << loaded.error().message << "\n";
-            return kExitConfigError;
-        }
-        for (const auto& warning : loaded.value().warnings) {
-            std::cerr << "config warning: " << warning << "\n";
-        }
-        config = loaded.value().config;
+    auto built_config = build_config(opts);
+    if (!built_config) {
+        return kExitConfigError;
     }
-    if (opts.port) config.comm.port = *opts.port;
-    if (opts.seed) config.wafer.seed = *opts.seed;
-    if (opts.rtf) config.scan.realtime_factor = *opts.rtf;
-    if (opts.out_dir) config.output.dir = *opts.out_dir;
+    ssim::core::Config config = *built_config;
 
     const std::string run_id = make_run_id();
     const std::string wafer_id =

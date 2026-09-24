@@ -15,6 +15,11 @@
 #include "ssim/core/events.hpp"
 #include "ssim/machine/machine_events.hpp"
 
+#ifdef SSIM_HAS_SECSGEM
+#include "ssim/secsgem/gem/gem_service.hpp"
+#include "ssim/secsgem/hsms/server.hpp"
+#endif
+
 namespace ssim::machine {
 
 namespace {
@@ -42,6 +47,42 @@ std::string format_wafer_id(int n) {
 }
 
 }  // namespace
+
+#ifdef SSIM_HAS_SECSGEM
+// The HSMS server needs its handler at construction and the GEM service needs
+// the server as its sender, so the server gets this forwarder first and the
+// GEM service is plugged in before the server starts listening.
+struct MachineRuntime::Comm {
+    class Forwarder final : public ssim::secsgem::hsms::IHsmsHandler {
+    public:
+        void set_target(ssim::secsgem::hsms::IHsmsHandler* t) { target = t; }
+        void on_data(const ssim::secsgem::hsms::Delivery& d) override {
+            if (target) target->on_data(d);
+        }
+        void on_session_state(ssim::secsgem::hsms::ConnectionState s) override {
+            if (target) target->on_session_state(s);
+        }
+        void on_transaction_timeout(std::uint32_t sys) override {
+            if (target) target->on_transaction_timeout(sys);
+        }
+        void on_error(const std::string& what) override {
+            if (target) target->on_error(what);
+        }
+
+    private:
+        ssim::secsgem::hsms::IHsmsHandler* target = nullptr;
+    };
+
+    Comm(const ssim::core::Config& config, ssim::core::IClock& clock)
+        : server(ssim::secsgem::hsms::server_config_from(config.comm), clock, forwarder) {}
+
+    Forwarder forwarder;
+    ssim::secsgem::hsms::HsmsServer server;
+    std::unique_ptr<ssim::secsgem::gem::GemService> gem;
+};
+#else
+struct MachineRuntime::Comm {};
+#endif
 
 ssim::core::Result<std::filesystem::path> create_run_dir(const std::filesystem::path& output_root) {
     std::error_code ec;
@@ -78,13 +119,56 @@ void MachineRuntime::RestartableScanDriver::start(std::string wafer_id) {
 }
 
 ssim::core::Result<std::unique_ptr<MachineRuntime>> MachineRuntime::create(
-    ssim::core::Config config, const std::filesystem::path& output_root) {
+    ssim::core::Config config, const std::filesystem::path& output_root, RuntimeOptions options) {
+    using R = ssim::core::Result<std::unique_ptr<MachineRuntime>>;
     auto run_dir = create_run_dir(output_root);
     if (!run_dir) {
-        return ssim::core::Result<std::unique_ptr<MachineRuntime>>::err(run_dir.error());
+        return R::err(run_dir.error());
     }
-    return ssim::core::Result<std::unique_ptr<MachineRuntime>>::ok(
-        std::make_unique<MachineRuntime>(std::move(config), run_dir.value()));
+    auto runtime = std::make_unique<MachineRuntime>(std::move(config), run_dir.value());
+    if (options.start_comm) {
+        auto started = runtime->start_comm();
+        if (!started) {
+            return R::err(started.error());
+        }
+    }
+    return R::ok(std::move(runtime));
+}
+
+ssim::core::Result<bool> MachineRuntime::start_comm() {
+    using R = ssim::core::Result<bool>;
+    if (!config_.comm.enabled) {
+        return R::ok(true);  // disabled at run time: the machine runs standalone
+    }
+#ifdef SSIM_HAS_SECSGEM
+    if (comm_) {
+        return R::ok(true);
+    }
+    auto comm = std::make_unique<Comm>(config_, clock_);
+    comm->gem = std::make_unique<ssim::secsgem::gem::GemService>(
+        ssim::secsgem::gem::gem_config_from(config_), *api_, bus_, alarms_, clock_, comm->server,
+        &logger_);
+    comm->forwarder.set_target(comm->gem.get());
+    auto listening = comm->server.start();
+    if (!listening) {
+        return R::err(listening.error());
+    }
+    comm_ = std::move(comm);
+    logger_.log(ssim::core::LogLevel::kInfo, "machine", "comm_started",
+                {{"port", comm_->server.local_port()}});
+    return R::ok(true);
+#else
+    return R::err({ssim::analysis::kWriteErrorExitCode,
+                   "this build has no SECS/GEM module (SSIM_ENABLE_SECSGEM=OFF)"});
+#endif
+}
+
+std::uint16_t MachineRuntime::hsms_port() const {
+#ifdef SSIM_HAS_SECSGEM
+    return comm_ ? comm_->server.local_port() : 0;
+#else
+    return 0;
+#endif
 }
 
 MachineRuntime::MachineRuntime(ssim::core::Config config, std::filesystem::path run_dir)
@@ -155,6 +239,13 @@ void MachineRuntime::shutdown() {
         return;
     }
     shut_down_ = true;
+#ifdef SSIM_HAS_SECSGEM
+    // The host link stops first: no more commands can arrive, and nothing new
+    // is posted to the I/O thread.
+    if (comm_) {
+        comm_->server.stop();
+    }
+#endif
     scan_thread_.request_abort();
     jobs_.close();
     sample_queue_.close();
@@ -162,6 +253,11 @@ void MachineRuntime::shutdown() {
         worker_.join();
     }
     controller_.stop();
+#ifdef SSIM_HAS_SECSGEM
+    // The controller no longer publishes, so the GEM service can go: its bus
+    // subscriptions are removed in its destructor.
+    comm_.reset();
+#endif
     logger_.stop();
 }
 

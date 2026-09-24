@@ -213,5 +213,41 @@ TEST_F(MachineRuntimeTest, DestroyingWhileScanningFinishesWithinTwoSeconds) {
     EXPECT_LT(elapsed, std::chrono::seconds(2));
 }
 
+// FR-MC-3 at run time: with comm.enabled=false the machine has no listener and
+// still scans, whatever the build contains.
+TEST_F(MachineRuntimeTest, WithCommDisabledThereIsNoListenerAndTheMachineStillWorks) {
+    config_.comm.enabled = false;
+    RuntimeOptions options;
+    options.start_comm = true;
+    auto created = MachineRuntime::create(config_, root_, options);
+    ASSERT_TRUE(created);
+    auto runtime = std::move(created).value();
+    EXPECT_EQ(runtime->hsms_port(), 0);
+
+    Recorder rec(runtime->bus());
+    ASSERT_TRUE(runtime->api().start(runtime->next_wafer_id(), 1, CommandSource::kUi));
+    ASSERT_TRUE(rec.wait_until([&] { return !rec.results.empty(); }));
+}
+
+#ifdef SSIM_HAS_SECSGEM
+TEST_F(MachineRuntimeTest, WithCommEnabledTheOsChoosesThePortWhenAskedForZero) {
+    config_.comm.enabled = true;
+    config_.comm.port = 0;
+    RuntimeOptions options;
+    options.start_comm = true;
+    auto created = MachineRuntime::create(config_, root_, options);
+    ASSERT_TRUE(created) << created.error().message;
+    EXPECT_NE(created.value()->hsms_port(), 0);
+}
+
+TEST_F(MachineRuntimeTest, ABadBindAddressIsAnErrorValueNotACrash) {
+    config_.comm.enabled = true;
+    config_.comm.bind = "not-an-address";
+    RuntimeOptions options;
+    options.start_comm = true;
+    EXPECT_FALSE(MachineRuntime::create(config_, root_, options));
+}
+#endif
+
 }  // namespace
 }  // namespace ssim::machine

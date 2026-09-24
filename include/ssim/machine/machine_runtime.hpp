@@ -49,6 +49,14 @@ namespace ssim::machine {
 [[nodiscard]] ssim::core::Result<std::filesystem::path> create_run_dir(
     const std::filesystem::path& output_root);
 
+struct RuntimeOptions {
+    // Start the optional SECS/GEM link (HSMS listener plus GEM service) when
+    // config.comm.enabled is also true. Off by default so tests and tools that
+    // build a runtime do not open a port. Ignored, with an error from
+    // start_comm(), in a build without SSIM_ENABLE_SECSGEM.
+    bool start_comm = false;
+};
+
 class MachineRuntime {
 public:
     // run_dir must already exist (see create_run_dir); wafer output goes in
@@ -60,7 +68,17 @@ public:
     MachineRuntime& operator=(const MachineRuntime&) = delete;
 
     [[nodiscard]] static ssim::core::Result<std::unique_ptr<MachineRuntime>> create(
-        ssim::core::Config config, const std::filesystem::path& output_root);
+        ssim::core::Config config, const std::filesystem::path& output_root,
+        RuntimeOptions options = {});
+
+    // Starts the SECS/GEM link (FR-MC-3: the machine works fully without it).
+    // Does nothing and succeeds when config.comm.enabled is false. Fails with
+    // an error value if the port cannot be bound, or if this build has no
+    // SECS/GEM module. Call once, after construction.
+    [[nodiscard]] ssim::core::Result<bool> start_comm();
+
+    // The HSMS port actually listening, or 0 if the link is not running.
+    std::uint16_t hsms_port() const;
 
     ssim::core::MachineApi& api() { return *api_; }
     ssim::core::EventBus& bus() { return bus_; }
@@ -115,6 +133,11 @@ private:
     std::atomic<int> wafers_started_{0};
     mutable std::mutex dir_mutex_;
     std::filesystem::path last_wafer_dir_;
+
+    // The SECS/GEM link. Defined in the .cpp so that this header never
+    // includes secsgem or Asio, and stays usable in a build without them.
+    struct Comm;
+    std::unique_ptr<Comm> comm_;
 
     std::thread worker_;
     bool shut_down_ = false;

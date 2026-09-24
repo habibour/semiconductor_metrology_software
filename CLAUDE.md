@@ -58,7 +58,7 @@ Hard constraints:
 | ssim_core | Config, units, clock, logging, queues, thread pool, event bus, command queue, machine controller, state machines | STL, JSON library |
 | ssim_hw | IStage, ILaserSensor, ILoadPort; simulated wafer model, simulated devices, fault injector, cassette simulator | ssim_core |
 | ssim_analysis | Edge exclusion, outlier rejection, curve fit, Stoney stress, uncertainty, wafer map, CSV/JSON/PNG writers | ssim_core (types only) |
-| ssim_machine | Reusable composition root (`MachineRuntime`): wires core, hardware and analysis for a machine that scans wafers back to back, on its own threads | ssim_core, ssim_hw, ssim_analysis |
+| ssim_machine | Reusable composition root (`MachineRuntime`): wires core, hardware and analysis for a machine that scans wafers back to back, on its own threads; hosts the optional SECS/GEM link | ssim_core, ssim_hw, ssim_analysis, ssim_secsgem (optional) |
 | ssim_secsgem | HSMS session and timers, SECS-II codec, message catalogue, GEM state models and handlers | ssim_core, Asio |
 | equipment_cli | Headless machine executable; demo and scenario modes | all of the above |
 | equipment_qt | Qt Widgets operator panel | all of the above, Qt |
