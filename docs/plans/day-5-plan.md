@@ -89,5 +89,5 @@ isolation) → wire into `equipment_cli` behind `SSIM_ENABLE_SECSGEM` → `host_
 - [x] XT-SECSGEM-1 run and result recorded: PASS, 15/15 (docs/protocol-notes.md).
 - [x] `SSIM_ENABLE_SECSGEM=OFF` / `comm.enabled=false` still fully functional —
       no regression from Days 1–3 (140 tests pass with the module off).
-- [ ] Tag `v0.2` pushed.
+- [x] Tag `v0.2` pushed (on `3ea3fa3`, with CI, ASan+UBSan and TSan green).
 - [x] Q1 answered: no Windows access, Tier 3 excluded (PRD D-11).

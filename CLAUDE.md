@@ -325,11 +325,11 @@ Mac limits to remember: no Valgrind or GDB on Apple Silicon (use ASan, Instrumen
 
 | Day | Date | Target | Status |
 |---|---|---|---|
-| D1 | Mon 21 Sep | Skeleton, CI on macOS, core basics, wafer model and simulated hardware, scope frozen | code done, CI not yet confirmed green |
+| D1 | Mon 21 Sep | Skeleton, CI on macOS, core basics, wafer model and simulated hardware, scope frozen | done; CI was red from the first commit because of a real bug (zero-noise `normal_distribution`), found and fixed on 24 Sep; green since `3ea3fa3` |
 | D2 | Tue 22 Sep | Scan, processing, controller, alarms, exports, CLI; tag v0.1 | not started |
-| D3 | Wed 23 Sep | Qt panel, wafer map, control modes; README draft | done Thu 24 Sep and committed locally, not pushed; first GIF not recorded, CI not confirmed, sanitizers not runnable on this Mac; cassette loop deferred to Day 6 |
-| D4 | Thu 24 Sep | SECS-II codec, fuzz tests, HSMS framing and timers | code done and committed locally, not pushed; UT-CODEC and UT-HSMS pass on this Mac; CI, sanitizers and the `TODO(verify)` protocol values unconfirmed |
-| D5 | Fri 25 Sep | GEM module, integration into the app as a separate step, host_sim and scenarios, interop test | done Thu 24 Sep and committed locally: GEM layer, `serve`, host_sim, 7 scenarios pass, XT-SECSGEM-1 passes (15/15) on this Mac; ST-cassette_run deferred (no cassette loop); the old Ubuntu CI failure was a real bug (zero-noise `normal_distribution`), fixed; scope is now macOS only; tag v0.2 not placed |
+| D3 | Wed 23 Sep | Qt panel, wafer map, control modes; README draft | done Thu 24 Sep; first GIF not recorded; cassette loop deferred to Day 6 |
+| D4 | Thu 24 Sep | SECS-II codec, fuzz tests, HSMS framing and timers | done Thu 24 Sep; UT-CODEC and UT-HSMS pass; sanitizers clean on the GitHub macOS runner; some protocol values still `TODO(verify)` |
+| D5 | Fri 25 Sep | GEM module, integration into the app as a separate step, host_sim and scenarios, interop test | done Thu 24 Sep, **tag v0.2 on `3ea3fa3`**: GEM layer, `serve`, host_sim, 7 scenarios, XT-SECSGEM-1 15/15; CI, ASan+UBSan and TSan all green on macOS; ST-cassette_run deferred (no cassette loop) |
 | D6 | Sat 26 Sep | Refactor, sanitizer fixes, ring buffer and benchmarks, Octave check, local demo script; tag v0.3 | not started |
 | D7 | Sun 27 Sep | README and video final, CV final, submit | not started |
 

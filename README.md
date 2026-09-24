@@ -124,8 +124,8 @@ scans cleanly, the second (W002) has an injected sensor-spike fault.
 ## What is verified
 
 Run `ctest` for the current list. At the time of writing the dev build (which
-includes the SECS/GEM module) has 336 passing tests. With
-`-DSSIM_ENABLE_SECSGEM=OFF` the same Day 1 to 3 suite (140 tests) still builds
+includes the SECS/GEM module) has 341 passing tests. With
+`-DSSIM_ENABLE_SECSGEM=OFF` the same Day 1 to 3 suite (143 tests) still builds
 and passes, so the machine does not depend on the module. The build with the Qt
 panel adds an offscreen test that clicks through the real window. Only what has
 actually been run is claimed here.
@@ -145,6 +145,11 @@ SECS/GEM subset (this project's own implementation):
   against `equipment_cli serve`: 15 of 15 checks passed, and a run set up to
   fail did fail. Details and what it does not confirm are in
   `docs/protocol-notes.md`.
+
+Continuous integration (GitHub Actions, macOS runner): the full build with the interop test,
+the build without the SECS/GEM module, the format check, AddressSanitizer with UBSan, and
+ThreadSanitizer are all green as of tag `v0.2`. Sanitizers do not run on the developer's
+own Mac, so the runner is where they are checked.
 
 Not verified yet:
 
