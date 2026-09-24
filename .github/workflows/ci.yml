@@ -25,7 +25,7 @@ jobs:
         run: cmake --build build --config Debug -j
 
       - name: Test
-        run: ctest --test-dir build -C Debug --output-on-failure
+        run: scripts/ci_ctest.sh build -C Debug
 
   # FR-MC-3: the machine must build, pass its tests and run without the
   # SECS/GEM module. The dev preset builds it (SSIM_ENABLE_SECSGEM=ON), so this
@@ -42,7 +42,7 @@ jobs:
         run: cmake --build build-off -j
 
       - name: Test
-        run: ctest --test-dir build-off --output-on-failure
+        run: scripts/ci_ctest.sh build-off
 
   clang-format-check:
     runs-on: macos-latest
