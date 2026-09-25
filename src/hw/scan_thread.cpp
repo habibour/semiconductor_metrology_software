@@ -99,6 +99,7 @@ void ScanThread::run(std::string wafer_id) {
     const int n_lines = scan_config_.lines;
 
     std::size_t sample_index = 0;
+    int last_percent_published = -1;
     const auto scan_start = std::chrono::steady_clock::now();
     bool aborted = false;
 
@@ -148,6 +149,17 @@ void ScanThread::run(std::string wafer_id) {
             block.positions_m.push_back(s);
             block.heights_m.push_back(dropped ? std::nan("") : height);
             block.timestamps.push_back(std::chrono::steady_clock::now());
+
+            // Progress on every whole percent of the wafer, not once per scan
+            // line, so a display shows a moving bar (FR-SCN-4). Subscribers that
+            // cannot keep up, such as the panel, limit their own update rate.
+            const int percent_done = static_cast<int>(
+                100.0 * (static_cast<double>(line) + static_cast<double>(p + 1) / n_points) /
+                n_lines);
+            if (percent_done > last_percent_published) {
+                last_percent_published = percent_done;
+                bus_.publish(ssim::core::ScanProgress{wafer_id, static_cast<double>(percent_done)});
+            }
         }
 
         const double percent =

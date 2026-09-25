@@ -121,6 +121,17 @@ scans cleanly, the second (W002) has an injected sensor-spike fault.
 4. File > Load config... and File > Settings... rebuild the machine; both are
    only possible while idle. File > Open results folder shows the output files.
 
+## Demo
+
+![Operator panel: a scan, an alarm, clearing it, and Online-Remote](docs/media/panel_demo.gif)
+
+The panel scanning wafer W001 (progress, then the wafer map and the result, stress
+-180.0 MPa recovered), wafer W002 raising a sensor alarm that blocks Start until it
+is cleared, and Online-Remote disabling the operator's Start. **This is not a screen
+recording:** the frames are rendered by the real panel widgets on Qt's offscreen
+platform while a scripted session drives them, then assembled into a GIF
+(`scripts/make_demo_gif.sh`, which needs a Qt build and `pip install pillow`).
+
 ## What is verified
 
 Run `ctest` for the current list. At the time of writing the dev build (which
@@ -160,7 +171,7 @@ Not verified yet:
   there). A sanitizer workflow exists in `.github/workflows/sanitizers.yml` but
   has not run yet, so the multithreaded code and the codec fuzz test have not
   been checked by a sanitizer.
-- The first demo GIF has not been recorded.
+- The demo GIF is rendered from the real panel, not a screen recording of it.
 
 ## Results
 

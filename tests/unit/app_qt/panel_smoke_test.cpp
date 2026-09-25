@@ -5,7 +5,10 @@
 #include <QComboBox>
 #include <QDir>
 #include <QElapsedTimer>
+#include <QFont>
+#include <QImage>
 #include <QLabel>
+#include <QPainter>
 #include <QProgressBar>
 #include <QPushButton>
 #include <QSignalSpy>
@@ -59,10 +62,110 @@ void shot(MainWindow& w, const char* name) {
 
 }  // namespace
 
+// Grabs the window every ~120 ms into numbered PNG files, with a caption drawn
+// on each frame. Used only by the on-demand demoFrames test to make the
+// README's demo GIF: the frames are rendered by the real widgets on Qt's
+// offscreen platform, they are not a screen recording.
+class FrameRecorder : public QObject {
+public:
+    FrameRecorder(QWidget* widget, const QString& dir) : widget_(widget), dir_(dir) {
+        timer_.setInterval(120);
+        QObject::connect(&timer_, &QTimer::timeout, [this] { capture(); });
+        timer_.start();
+    }
+    void set_caption(const QString& text) { caption_ = text; }
+    void hold(int ms) { QTest::qWait(ms); }
+    int frames() const { return index_; }
+
+private:
+    void capture() {
+        QImage image = widget_->grab().toImage().convertToFormat(QImage::Format_RGB32);
+        if (!caption_.isEmpty()) {
+            QPainter painter(&image);
+            painter.setRenderHint(QPainter::TextAntialiasing);
+            QFont font = painter.font();
+            font.setPointSize(15);
+            font.setBold(true);
+            painter.setFont(font);
+            const QRect bar(0, image.height() - 40, image.width(), 40);
+            painter.fillRect(bar, QColor(20, 20, 20, 215));
+            painter.setPen(Qt::white);
+            painter.drawText(bar.adjusted(12, 0, -12, 0), Qt::AlignVCenter | Qt::AlignLeft,
+                             caption_);
+        }
+        image.save(
+            QDir(dir_).filePath(QStringLiteral("frame_%1.png").arg(index_++, 4, 10, QChar('0'))));
+    }
+
+    QWidget* widget_;
+    QString dir_;
+    QString caption_;
+    QTimer timer_;
+    int index_ = 0;
+};
+
 class PanelSmokeTest : public QObject {
     Q_OBJECT
 
 private Q_SLOTS:
+    // On demand only: SSIM_FRAMES_DIR=/some/dir records the demo session as
+    // numbered PNG frames (see scripts/make_demo_gif.sh). Skipped otherwise.
+    void demoFrames() {
+        const QString frames_dir = qEnvironmentVariable("SSIM_FRAMES_DIR");
+        if (frames_dir.isEmpty()) {
+            qInfo() << "skipped: set SSIM_FRAMES_DIR to record demo frames";
+            return;
+        }
+        QTemporaryDir dir;
+        auto cfg = make_config(dir, 3.0);
+        ssim::core::FaultConfig fault;  // the second wafer has a sensor fault
+        fault.wafer = "W002";
+        fault.type = "spike";
+        fault.rate = 0.05;
+        fault.amplitude_um = 40.0;
+        cfg.faults.push_back(fault);
+
+        MainWindow w;
+        QVERIFY(w.rebuild(cfg).isEmpty());
+        w.show();
+        auto* process = label_with_prefix(w, QStringLiteral("Process:"));
+        QVERIFY(process);
+        FrameRecorder recorder(&w, frames_dir);
+
+        recorder.set_caption(
+            QStringLiteral("Idle. The machine is Online-Local; Start is enabled."));
+        recorder.hold(1400);
+
+        recorder.set_caption(
+            QStringLiteral("Start wafer W001: progress, then the wafer map and the result"));
+        QTest::mouseClick(w.start_button(), Qt::LeftButton);
+        QTRY_VERIFY_WITH_TIMEOUT(w.runtime()->api().snapshot().last_result.has_value(), 60000);
+        QTRY_VERIFY_WITH_TIMEOUT(process->text() == QStringLiteral("Process: Idle"), 10000);
+        recorder.hold(4500);
+
+        recorder.set_caption(QStringLiteral("Wafer W002 has an injected sensor fault"));
+        QTest::mouseClick(w.start_button(), Qt::LeftButton);
+        QTRY_VERIFY_WITH_TIMEOUT(!w.alarm_banner()->isHidden(), 60000);
+        recorder.set_caption(
+            QStringLiteral("Alarm 1001: no result is reported and Start stays disabled"));
+        recorder.hold(2600);
+
+        recorder.set_caption(QStringLiteral("Clear alarm: the machine is ready again"));
+        QTest::mouseClick(w.clear_button(), Qt::LeftButton);
+        QTRY_VERIFY_WITH_TIMEOUT(w.alarm_banner()->isHidden(), 5000);
+        recorder.hold(1800);
+
+        recorder.set_caption(
+            QStringLiteral("Online-Remote: the host is in charge, so the operator cannot Start"));
+        w.mode_combo()->setCurrentIndex(2);
+        Q_EMIT w.mode_combo()->activated(2);
+        QTRY_VERIFY_WITH_TIMEOUT(!w.start_button()->isEnabled(), 5000);
+        recorder.hold(2600);
+
+        qInfo() << "recorded" << recorder.frames() << "frames";
+        QVERIFY(recorder.frames() > 40);
+    }
+
     // Scripted version of the manual checklist: real clicks, real machine.
     void guidedWalkthrough() {
         QTemporaryDir dir;

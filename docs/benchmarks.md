@@ -12,22 +12,26 @@ and processed; progress signals reaching the GUI are counted.
 
 | Field | Value |
 |---|---|
-| Date | 2026-09-24 |
+| Date | 2026-09-25 (re-measured after progress became per-percent) |
 | Machine / OS | Apple Silicon Mac, macOS 26.5.1 |
 | Compiler / Qt | AppleClang 17, Qt 6.9.3 |
 | Build | Debug, Qt `offscreen` platform (no real window rendering) |
 | Settings | default wafer, real-time factor 4.0 |
-| Runs | 2 |
+| Runs | 3 |
 
-| Run | Scan + processing time | Progress signals to GUI | Longest GUI-thread gap |
+| Run | Scan + processing time | Progress signals to the GUI | Longest GUI-thread gap |
 |---|---|---|---|
-| 1 | 6071 ms | 7 | 20 ms |
-| 2 | 6141 ms | 7 | 21 ms |
+| 1 | 6077 ms | 105 | 21 ms |
+| 2 | 6124 ms | 104 | 21 ms |
+| 3 | 6076 ms | 103 | 19 ms |
 
 Reading: the target is a gap of at most 50 ms and at most about 30 progress
-updates per second. Both held in these two runs. Limits of this measurement:
-two runs only, offscreen (so painting cost is not the real one), Debug build,
-one machine. Progress is currently published once per scan line by the scan
-thread, so 7 signals (6 lines plus the reset) says little about the 30 Hz cap;
-that cap is enforced by the bridge's 33 ms timer and would need a scan that
-reports faster to be exercised.
+updates per second. The gap held in all three runs. The scan thread now reports
+progress on every whole percent (about 100 events per wafer), so the bar moves
+smoothly; here that is about 17 updates per second, which is **below** the 30 Hz
+limit, so the panel's 33 ms coalescing timer had nothing to cut and the limit
+itself is not exercised by this measurement. (Before 2026-09-25 progress was
+reported once per scan line, 6 events per wafer; an earlier version of this
+table recorded 7 signals and gaps of 20 and 21 ms.) Limits of the measurement:
+three runs, offscreen (so painting cost is not the real one), Debug build, one
+machine.

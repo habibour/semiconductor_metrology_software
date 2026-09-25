@@ -6,9 +6,11 @@
 #include <functional>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "ssim/core/alarms.hpp"
 #include "ssim/core/event_bus.hpp"
+#include "ssim/core/events.hpp"
 #include "ssim/hw/laser_sensor_sim.hpp"
 #include "ssim/hw/stage_sim.hpp"
 
@@ -118,6 +120,27 @@ TEST(ScanThread, CompletesAllLinesAndPushesOneBlockPerLine) {
     EXPECT_NEAR(block->angle_rad, 0.0, 1e-12);
     EXPECT_GT(block->positions_m.size(), 0u);
     EXPECT_EQ(block->positions_m.size(), block->heights_m.size());
+}
+
+// FR-SCN-4: progress is reported on every whole percent of the wafer, not once
+// per scan line, so a display can show a moving bar. It never goes backwards and
+// ends at exactly 100.
+TEST(ScanThread, ProgressAdvancesInWholePercentStepsAndEndsAtOneHundred) {
+    Fixture f;
+    std::vector<double> percents;  // written on the scan thread, read after join()
+    f.bus.subscribe<ssim::core::ScanProgress>(
+        [&percents](const ssim::core::ScanProgress& e) { percents.push_back(e.percent); });
+    auto scan = f.make_scan_thread();
+
+    scan->start("W001");
+    scan->join();
+
+    ASSERT_GE(percents.size(), 90u) << "expected about one update per percent";
+    for (std::size_t i = 1; i < percents.size(); ++i) {
+        EXPECT_GE(percents[i], percents[i - 1]) << "progress went backwards at update " << i;
+    }
+    EXPECT_LE(percents.front(), 2.0);
+    EXPECT_DOUBLE_EQ(percents.back(), 100.0);
 }
 
 TEST(ScanThread, LineAnglesAreEvenlySpacedOver180Degrees) {

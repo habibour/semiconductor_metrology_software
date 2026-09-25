@@ -4,7 +4,7 @@ Guidance for Claude (and any human contributor) working in this repository. Read
 
 ## 1. Read this first
 
-**Current day: not started.** Set this to `Day 1` through `Day 7` before starting a session, matching the plan in PRD section 13. Habib edits this line by hand; Claude never changes it on its own.
+**Current day: Day 6.** Set this to `Day 1` through `Day 7` before starting a session, matching the plan in PRD section 13. Habib edits this line by hand; Claude never changes it on its own.
 
 - Source of truth: `docs/PRD.md` (v0.1, written 21 Sep 2026). If code and PRD disagree, stop, say so, and either fix the code or update the PRD on purpose in the same change. Never let them drift silently.
 - Day-by-day breakdown: `docs/specs/day-N-spec.md` filters the PRD down to exactly what day N covers (requirement IDs, tests, exit criteria); `docs/plans/day-N-plan.md` is the ordered, file-level implementation checklist for that spec. Both exist for Day 1 through Day 7, mirroring PRD section 13. They are an index into the PRD, not a replacement for it.
@@ -326,8 +326,8 @@ Mac limits to remember: no Valgrind or GDB on Apple Silicon (use ASan, Instrumen
 | Day | Date | Target | Status |
 |---|---|---|---|
 | D1 | Mon 21 Sep | Skeleton, CI on macOS, core basics, wafer model and simulated hardware, scope frozen | done; CI was red from the first commit because of a real bug (zero-noise `normal_distribution`), found and fixed on 24 Sep; green since `3ea3fa3` |
-| D2 | Tue 22 Sep | Scan, processing, controller, alarms, exports, CLI; tag v0.1 | not started |
-| D3 | Wed 23 Sep | Qt panel, wafer map, control modes; README draft | done Thu 24 Sep; first GIF not recorded; cassette loop deferred to Day 6 |
+| D2 | Tue 22 Sep | Scan, processing, controller, alarms, exports, CLI; tag v0.1 | done (Day 2 exit criteria met in `1259b8c`); **tag v0.1 not placed**: no standalone-only commit had a green CI, so it waits on a decision |
+| D3 | Wed 23 Sep | Qt panel, wafer map, control modes; README draft | done Thu 24 Sep; demo GIF (`docs/media/panel_demo.gif`) is rendered from the real widgets offscreen, not a screen recording; a true screen recording is still worth making for the video; cassette loop deferred |
 | D4 | Thu 24 Sep | SECS-II codec, fuzz tests, HSMS framing and timers | done Thu 24 Sep; UT-CODEC and UT-HSMS pass; sanitizers clean on the GitHub macOS runner; some protocol values still `TODO(verify)` |
 | D5 | Fri 25 Sep | GEM module, integration into the app as a separate step, host_sim and scenarios, interop test | done Thu 24 Sep, **tag v0.2 on `3ea3fa3`**: GEM layer, `serve`, host_sim, 7 scenarios, XT-SECSGEM-1 15/15; CI, ASan+UBSan and TSan all green on macOS; ST-cassette_run deferred (no cassette loop) |
 | D6 | Sat 26 Sep | Refactor, sanitizer fixes, ring buffer and benchmarks, Octave check, local demo script; tag v0.3 | not started |

@@ -57,7 +57,7 @@ Read `docs/specs/day-3-spec.md` first. Builds on Day 2's controller/analysis/CLI
 ## Day 3 done-checklist (maps back to day-3-spec.md)
 
 - [x] `MachineApi` facade exists and the Qt panel only talks through it.
-- [ ] Panel demonstrates: load config, switch control mode, Start/Stop/Abort,
+- [x] Panel demonstrates: load config, switch control mode, Start/Stop/Abort,
       live progress + wafer map, alarm banner + clear — recorded as the "first
       GIF".
 - [x] GUI thread confirmed non-blocking (no long call on the Qt thread) and
