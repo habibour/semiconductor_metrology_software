@@ -17,7 +17,7 @@ numbers, benchmark results, coverage figures, bug stories or interview claims").
 |---|---|---|
 | 12.1 | README: plain-English summary, architecture diagram, quickstart, results table, limits, "how to explain this in an interview" note | PRD §12.1 |
 | 12.1 | Demo GIF + ≤2-minute unlisted video, linked from README and CV; storyboard: panel start → switch to Remote → run host script → watch scan → show result/map → trigger alarm → clear it → show tests/CI badges | PRD §12.1 |
-| 12.1 | CI badges (three OS, sanitizers), test count, benchmark table | PRD §12.1 |
+| 12.1 | CI badges (macOS, sanitizers), test count, benchmark table | PRD §12.1 |
 | 12.2 | Confirm the Level 2 release and local demo deliverables from Day 6 are actually linked and working from the README | PRD §12.2 |
 | NFR-DOC-1 | README quickstart verified to work from a clean checkout in under 10 minutes — actually time it | PRD §9 |
 | NFR-LIC-1 | Own code under a permissive licence (set Day 1); third-party licences listed (Qt LGPL+dynamic linking, Asio Boost licence, GoogleTest BSD, nlohmann/json MIT, stb public domain) | PRD §9 |
