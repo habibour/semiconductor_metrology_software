@@ -188,14 +188,15 @@ MachineRuntime::MachineRuntime(ssim::core::Config config, std::filesystem::path 
           alarms_,
           [this](std::string id) {
               controller_.notify_scan_complete(id);
-              (void)jobs_.push(std::move(id));
+              (void)jobs_.push(WorkItem{WorkItem::Kind::kProcessWafer, std::move(id)});
           },
           [this] {
-              // The scan thread is the only producer and has stopped, so
-              // draining here cannot eat blocks of a later run (that run can
-              // only start once notify_stage_stopped() has returned).
-              drain_sample_queue();
-              controller_.notify_stage_stopped();
+              // The sample queue has one consumer, the processing thread, so
+              // the leftover blocks of an aborted scan are discarded there; it
+              // then reports "stage stopped". The scan thread has finished
+              // producing, and the next run can only start after that report,
+              // so the discard cannot eat blocks of a later run.
+              (void)jobs_.push(WorkItem{WorkItem::Kind::kDiscardSamples, {}});
           }),
       driver_(scan_thread_),
       controller_(bus_, driver_, alarms_) {
@@ -270,7 +271,9 @@ std::filesystem::path MachineRuntime::last_wafer_dir() const {
     return last_wafer_dir_;
 }
 
-void MachineRuntime::drain_sample_queue() {
+void MachineRuntime::discard_queued_samples() {
+    // Called only on the processing thread (the sole consumer) after the scan
+    // thread has stopped producing, so size() cannot grow and pop() cannot block.
     while (sample_queue_.size() > 0) {
         (void)sample_queue_.pop();
     }
@@ -278,8 +281,13 @@ void MachineRuntime::drain_sample_queue() {
 
 void MachineRuntime::worker_loop() {
     ssim::core::set_current_thread_name("processing");
-    while (auto wafer_id = jobs_.pop()) {
-        process_wafer(*wafer_id);
+    while (auto item = jobs_.pop()) {
+        if (item->kind == WorkItem::Kind::kDiscardSamples) {
+            discard_queued_samples();
+            controller_.notify_stage_stopped();
+        } else {
+            process_wafer(item->wafer_id);
+        }
     }
 }
 

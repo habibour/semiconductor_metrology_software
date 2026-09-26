@@ -109,7 +109,7 @@ private:
 
     void worker_loop();
     void process_wafer(const std::string& wafer_id);
-    void drain_sample_queue();
+    void discard_queued_samples();
     void shutdown();
 
     ssim::core::Config config_;
@@ -122,8 +122,14 @@ private:
     ssim::hw::SimulatedHardware hw_;
     ssim::core::EventBus bus_;
     ssim::core::AlarmManager alarms_;
-    ssim::core::BoundedQueue<ssim::core::SampleBlock> sample_queue_;
-    ssim::core::BoundedQueue<std::string> jobs_;  // wafer ids whose scan finished
+    ssim::core::SampleQueue sample_queue_;
+    // Work for the processing thread, the sample queue's only consumer.
+    struct WorkItem {
+        enum class Kind { kProcessWafer, kDiscardSamples };
+        Kind kind = Kind::kProcessWafer;
+        std::string wafer_id;  // kProcessWafer: the wafer whose scan finished
+    };
+    ssim::core::BoundedQueue<WorkItem> jobs_;
     ssim::analysis::FitThreadPool pool_;
     ssim::hw::ScanThread scan_thread_;
     RestartableScanDriver driver_;

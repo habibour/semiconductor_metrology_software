@@ -25,7 +25,6 @@
 #include "ssim/core/config.hpp"
 #include "ssim/core/event_bus.hpp"
 #include "ssim/core/iscan_driver.hpp"
-#include "ssim/core/queue.hpp"
 #include "ssim/core/scan_types.hpp"
 #include "ssim/hw/fault_injector.hpp"
 #include "ssim/hw/ilaser_sensor.hpp"
@@ -39,9 +38,8 @@ public:
     ScanThread(IStage& stage, ILaserSensor& laser, const WaferModel& wafer_model,
                ssim::core::ScanConfig scan_config,
                std::vector<ssim::core::FaultConfig> fault_configs,
-               ssim::core::BoundedQueue<ssim::core::SampleBlock>& sample_queue,
-               ssim::core::EventBus& bus, ssim::core::AlarmManager& alarms,
-               std::function<void(std::string)> on_lines_complete,
+               ssim::core::SampleQueue& sample_queue, ssim::core::EventBus& bus,
+               ssim::core::AlarmManager& alarms, std::function<void(std::string)> on_lines_complete,
                std::function<void()> on_stopped);
     ~ScanThread() override;
 
@@ -60,7 +58,7 @@ private:
     const WaferModel& wafer_model_;
     ssim::core::ScanConfig scan_config_;
     std::vector<ssim::core::FaultConfig> fault_configs_;
-    ssim::core::BoundedQueue<ssim::core::SampleBlock>& sample_queue_;
+    ssim::core::SampleQueue& sample_queue_;
     ssim::core::EventBus& bus_;
     ssim::core::AlarmManager& alarms_;
     std::function<void(std::string)> on_lines_complete_;

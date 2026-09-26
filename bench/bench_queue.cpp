@@ -13,6 +13,7 @@
 
 #include "bench_common.hpp"
 #include "ssim/core/queue.hpp"
+#include "ssim/core/spsc_ring_queue.hpp"
 
 namespace {
 
@@ -131,5 +132,12 @@ int main() {
         bench<V1, Small>("v1 mutex + condvar", "8 B", producers, kTotal);
     }
     bench<V1Block, Block64>("v1 mutex + condvar", "64 B", 1, kTotal);
+
+    // The ring is single-producer by design, so only the one-producer rows exist
+    // for it; several producers would break its contract.
+    using V2 = ssim::core::SpscRingQueue<Small>;
+    using V2Block = ssim::core::SpscRingQueue<Block64>;
+    bench<V2, Small>("v2 lock-free ring", "8 B", 1, kTotal);
+    bench<V2Block, Block64>("v2 lock-free ring", "64 B", 1, kTotal);
     return 0;
 }

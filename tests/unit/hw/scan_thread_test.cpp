@@ -76,8 +76,7 @@ struct Fixture {
     LaserSensorSim laser{stage, wafer_model, 0.5e-6, wafer_model.seed()};
     ssim::core::EventBus bus;
     ssim::core::AlarmManager alarms{bus};
-    ssim::core::BoundedQueue<ssim::core::SampleBlock> queue{64,
-                                                            ssim::core::BackpressurePolicy::kBlock};
+    ssim::core::SampleQueue queue{64, ssim::core::BackpressurePolicy::kBlock};
 
     std::mutex done_mutex;
     bool completed = false;

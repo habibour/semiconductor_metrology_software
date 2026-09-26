@@ -273,8 +273,8 @@ int main(int argc, char** argv) {
 
     ssim::core::EventBus bus;
     ssim::core::AlarmManager alarms(bus);
-    ssim::core::BoundedQueue<ssim::core::SampleBlock> sample_queue(
-        static_cast<std::size_t>(config.scan.lines) + 1, ssim::core::BackpressurePolicy::kBlock);
+    ssim::core::SampleQueue sample_queue(static_cast<std::size_t>(config.scan.lines) + 1,
+                                         ssim::core::BackpressurePolicy::kBlock);
 
     bus.subscribe<ssim::core::StateChanged>([&logger](const ssim::core::StateChanged& e) {
         logger.log(ssim::core::LogLevel::kInfo, "machine", "state_change",

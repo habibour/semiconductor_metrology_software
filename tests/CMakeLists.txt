@@ -14,6 +14,7 @@ ssim_add_unit_test(ssim_smoke_test SOURCES unit/smoke_test.cpp)
 
 ssim_add_unit_test(ssim_core_clock_test SOURCES unit/core/clock_test.cpp LIBS ssim_core)
 ssim_add_unit_test(ssim_core_queue_test SOURCES unit/core/queue_test.cpp LIBS ssim_core)
+ssim_add_unit_test(ssim_core_spsc_ring_queue_test SOURCES unit/core/spsc_ring_queue_test.cpp LIBS ssim_core)
 ssim_add_unit_test(ssim_core_event_bus_test SOURCES unit/core/event_bus_test.cpp LIBS ssim_core)
 ssim_add_unit_test(ssim_core_logger_test SOURCES unit/core/logger_test.cpp LIBS ssim_core)
 ssim_add_unit_test(ssim_core_config_test SOURCES unit/core/config_test.cpp LIBS ssim_core)

@@ -12,6 +12,8 @@
 #include <cstddef>
 #include <vector>
 
+#include "ssim/core/spsc_ring_queue.hpp"
+
 namespace ssim::core {
 
 struct SampleBlock {
@@ -21,5 +23,10 @@ struct SampleBlock {
     std::vector<double> heights_m;  // nan where a sample was dropped (FaultType::kDropout)
     std::vector<std::chrono::steady_clock::time_point> timestamps;
 };
+
+// The sample path: the scan thread is the only producer and the processing
+// worker the only consumer, which is what lets it be the lock-free ring (v2,
+// D-09). Swapping back to BoundedQueue<SampleBlock> is a one-line change here.
+using SampleQueue = SpscRingQueue<SampleBlock>;
 
 }  // namespace ssim::core

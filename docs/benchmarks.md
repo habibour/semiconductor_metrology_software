@@ -125,6 +125,41 @@ Four threads are slower than the ideal (30.3 / 4 = 7.6 ms) because six lines do
 not divide evenly over four workers (two workers get two lines). The production
 default pool is one thread fewer than the hardware threads.
 
+### Sample-path queue, v2 (lock-free SPSC ring), BM-QUEUE-1 and SM3
+
+Change: `SpscRingQueue<T>` (`include/ssim/core/spsc_ring_queue.hpp`), same API
+and back-pressure policies as v1. Lock-free fast path with cached indices and
+cache-line separated head/tail; it parks on a mutex and condition variable only
+when the ring is full or empty. One producer and one consumer only, so only the
+one-producer rows exist for it. Same machine and harness as the baseline
+(capacity 1024, blocking policy, 2,000,000 items per run, 5 runs, integrity
+checksum checked every run). Load average about 3.6 during these runs.
+
+| queue | payload | producers | median M items/s | worst | best | vs v1, same row |
+|---|---|---|---|---|---|---|
+| v1 mutex + condvar | 8 B | 1 | 21.62 | 18.44 | 21.96 | |
+| v2 lock-free ring | 8 B | 1 | 127.72 | 119.69 | 140.36 | 5.9x |
+| v1 mutex + condvar | 64 B | 1 | 19.35 | 16.79 | 19.55 | |
+| v2 lock-free ring | 64 B | 1 | 36.36 | 34.37 | 37.63 | 1.9x |
+
+(The v1 rows in this table are from the same run as the v2 rows, so the ratio
+compares like with like; the baseline section above is an earlier run of v1,
+23.00 and 20.13 M items/s.) An independent earlier run of the same binary gave
+124.34 and 35.01 M items/s for v2.
+
+SM3 (at least 2x the mutex queue): met for the 8-byte item (5.9x, 2.8x even
+against the worst-run of v1). Not met for the 64-byte item: 1.88x. With a 64-byte
+payload every hand-over moves a whole cache line between the two cores, and that
+transfer, not the queue's bookkeeping, sets the limit. I tried giving every slot
+its own cache line; it made the 8-byte case 3x slower (43 M items/s) because
+small items no longer share a line, so that change was reverted.
+
+What this means in the product: the sample path moves about 6 blocks per wafer,
+so queue speed is not where a wafer's time goes (a scan takes seconds, analysis
+about 8 to 30 ms). The ring is there because the design called for a swappable
+lock-free v2 with measured numbers, and it removes a mutex from the scan thread's
+push, not because the queue was a bottleneck.
+
 ## GUI responsiveness during a scan (FR-UI-3, NFR-PERF-4) — informal
 
 Test: `QtPanelSmoke` / `scanKeepsGuiResponsiveAndRateLimited`
