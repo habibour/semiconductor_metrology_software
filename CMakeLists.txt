@@ -36,6 +36,10 @@ if(SSIM_BUILD_QT)
     add_subdirectory(src/app_qt)
 endif()
 
+if(SSIM_BUILD_BENCH)
+    add_subdirectory(bench)
+endif()
+
 if(SSIM_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
