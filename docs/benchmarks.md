@@ -104,6 +104,27 @@ faster. The pool size still changes nothing because the per-line fits are only
 0.117 ms; the filter is still run serially, line by line. Whether spreading the
 six lines over threads helps is measured in the next step.
 
+### Analysis of one nominal wafer, step 2: per-line filtering on the pool (BM-ANALYSIS-1, SM4)
+
+Change: edge exclusion and outlier rejection for each line now run as pool jobs
+(`FitThreadPool::for_each_index`); aggregation stays serial and in line order.
+`FitThreadPool.PipelineResultDoesNotDependOnThreadCount` checks that stress,
+every sample flag and the fits are bit-identical for 1, 2, 3 and 6 threads.
+
+Same machine and wafer, median of runs (run under the same background load as
+step 1). The wafer has six lines, so more than six threads cannot help.
+
+| pool threads | baseline (all serial) | step 1 (faster filter) | step 2 (filter on pool) | speed-up vs baseline |
+|---|---|---|---|---|
+| 1 | 112.697 ms | 29.719 ms | 30.336 ms | 3.7x |
+| 2 | 112.136 ms | 29.684 ms | 15.697 ms | 7.1x |
+| 4 | 112.305 ms | 29.610 ms | 11.004 ms | 10.2x |
+| 6 | 112.069 ms | 29.627 ms | 7.455 ms | 15.0x |
+
+Four threads are slower than the ideal (30.3 / 4 = 7.6 ms) because six lines do
+not divide evenly over four workers (two workers get two lines). The production
+default pool is one thread fewer than the hardware threads.
+
 ## GUI responsiveness during a scan (FR-UI-3, NFR-PERF-4) — informal
 
 Test: `QtPanelSmoke` / `scanKeepsGuiResponsiveAndRateLimited`

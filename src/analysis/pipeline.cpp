@@ -19,14 +19,21 @@ PipelineResult run_pipeline(const std::vector<ssim::core::SampleBlock>& lines,
                             const ssim::core::Config& config, FitThreadPool& pool) {
     PipelineResult result;
 
+    // Each line is filtered independently, so the lines are spread over the
+    // pool; the aggregation below stays serial and in line order, so the
+    // result does not depend on the thread count.
+    result.filtered_lines.resize(lines.size());
+    pool.for_each_index(lines.size(), [&](std::size_t i) {
+        const auto& block = lines[i];
+        LineSamples raw{block.angle_rad, block.positions_m, block.heights_m};
+        FilterResult filtered = apply_edge_exclusion(raw, config.scan.edge_exclusion_mm);
+        result.filtered_lines[i] = apply_outlier_rejection(filtered, config.analysis.outlier_mad_k);
+    });
+
     std::size_t total_samples = 0;
     std::size_t total_removed = 0;
     std::size_t total_outliers = 0;
-    for (const auto& block : lines) {
-        LineSamples raw{block.angle_rad, block.positions_m, block.heights_m};
-        FilterResult filtered = apply_edge_exclusion(raw, config.scan.edge_exclusion_mm);
-        filtered = apply_outlier_rejection(filtered, config.analysis.outlier_mad_k);
-
+    for (const auto& filtered : result.filtered_lines) {
         for (const auto& s : filtered.samples) {
             if (s.flag == SampleFlag::kDropped) {
                 result.any_dropout = true;
@@ -36,7 +43,6 @@ PipelineResult run_pipeline(const std::vector<ssim::core::SampleBlock>& lines,
         }
         total_samples += filtered.samples.size();
         total_removed += filtered.removed_count;
-        result.filtered_lines.push_back(std::move(filtered));
     }
     result.removed_fraction_overall =
         total_samples > 0 ? static_cast<double>(total_removed) / static_cast<double>(total_samples)

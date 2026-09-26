@@ -32,6 +32,12 @@ public:
     FitThreadPool(const FitThreadPool&) = delete;
     FitThreadPool& operator=(const FitThreadPool&) = delete;
 
+    // Runs fn(0) .. fn(count - 1) on the workers and blocks until all have
+    // returned. fn must write only to its own index's output slot and must not
+    // throw (exceptions never cross a thread boundary). Used for the per-line
+    // filter stage and, through fit_lines, the per-line fits.
+    void for_each_index(std::size_t count, const std::function<void(std::size_t)>& fn);
+
     // Fits every line, blocks until all are done, and returns results in
     // the same order as filtered_lines.
     std::vector<LineFitResult> fit_lines(const std::vector<FilterResult>& filtered_lines);

@@ -40,17 +40,14 @@ FitThreadPool::~FitThreadPool() {
     }
 }
 
-std::vector<LineFitResult> FitThreadPool::fit_lines(
-    const std::vector<FilterResult>& filtered_lines) {
-    std::vector<LineFitResult> results(filtered_lines.size());
-
+void FitThreadPool::for_each_index(std::size_t count, const std::function<void(std::size_t)>& fn) {
     std::mutex done_mutex;
     std::condition_variable done_cv;
-    std::size_t remaining = filtered_lines.size();
+    std::size_t remaining = count;
 
-    for (std::size_t i = 0; i < filtered_lines.size(); ++i) {
-        jobs_.push([&filtered_lines, &results, &done_mutex, &done_cv, &remaining, i] {
-            results[i] = fit_line(filtered_lines[i]);
+    for (std::size_t i = 0; i < count; ++i) {
+        jobs_.push([&fn, &done_mutex, &done_cv, &remaining, i] {
+            fn(i);
             std::lock_guard lock(done_mutex);
             --remaining;
             if (remaining == 0) {
@@ -61,6 +58,13 @@ std::vector<LineFitResult> FitThreadPool::fit_lines(
 
     std::unique_lock lock(done_mutex);
     done_cv.wait(lock, [&remaining] { return remaining == 0; });
+}
+
+std::vector<LineFitResult> FitThreadPool::fit_lines(
+    const std::vector<FilterResult>& filtered_lines) {
+    std::vector<LineFitResult> results(filtered_lines.size());
+    for_each_index(filtered_lines.size(),
+                   [&](std::size_t i) { results[i] = fit_line(filtered_lines[i]); });
     return results;
 }
 
