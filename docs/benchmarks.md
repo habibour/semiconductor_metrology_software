@@ -75,6 +75,35 @@ decode per second.
 The target is met (4.5 times over) without any optimisation, so none was done.
 
 
+## After optimisation
+
+### Analysis of one nominal wafer, step 1: outlier rejection (BM-ANALYSIS-1, NFR-PERF-1, SM4)
+
+Change: the sliding-window median/MAD filter no longer allocates two vectors and
+runs two `nth_element` calls per sample. It keeps one sorted window that gains
+and loses one value per step, and finds the MAD by merging the two sorted sides
+of the window around the median. The result is bit-identical to the old version:
+`outlier_equivalence_test.cpp` keeps the old code as a reference and compares
+every flag on 2,500 random lines (short lines, ties, spikes, edge-excluded
+gaps, several window radii) and on full-size 12,001-sample lines.
+
+Same machine, same build, same wafer (6 lines, 72,006 samples), median of runs.
+Load average was 4.5 during this run, higher than for the baseline, so the
+"after" numbers are if anything pessimistic.
+
+| | before | after | change |
+|---|---|---|---|
+| outlier rejection, 6 lines, single thread | 113.233 ms | 28.001 ms | 4.0x faster |
+| pipeline, 1 pool thread | 112.697 ms | 29.719 ms | 3.8x faster (-73.6%) |
+| pipeline, 2 pool threads | 112.136 ms | 29.684 ms | |
+| pipeline, 4 pool threads | 112.305 ms | 29.610 ms | |
+| pipeline, 6 pool threads | 112.069 ms | 29.627 ms | |
+
+NFR-PERF-1 (under 100 ms): met, 29.7 ms. SM4 (at least 25% faster): met, 73.6%
+faster. The pool size still changes nothing because the per-line fits are only
+0.117 ms; the filter is still run serially, line by line. Whether spreading the
+six lines over threads helps is measured in the next step.
+
 ## GUI responsiveness during a scan (FR-UI-3, NFR-PERF-4) — informal
 
 Test: `QtPanelSmoke` / `scanKeepsGuiResponsiveAndRateLimited`

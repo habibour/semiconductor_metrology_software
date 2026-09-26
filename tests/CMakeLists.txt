@@ -31,6 +31,7 @@ ssim_add_unit_test(ssim_hw_scan_thread_test SOURCES unit/hw/scan_thread_test.cpp
 
 ssim_add_unit_test(ssim_analysis_edge_exclusion_test SOURCES unit/analysis/edge_exclusion_test.cpp LIBS ssim_analysis)
 ssim_add_unit_test(ssim_analysis_outlier_test SOURCES unit/analysis/outlier_test.cpp LIBS ssim_analysis)
+ssim_add_unit_test(ssim_analysis_outlier_equivalence_test SOURCES unit/analysis/outlier_equivalence_test.cpp LIBS ssim_analysis)
 ssim_add_unit_test(ssim_analysis_line_fit_test SOURCES unit/analysis/line_fit_test.cpp LIBS ssim_analysis)
 ssim_add_unit_test(ssim_analysis_combine_test SOURCES unit/analysis/combine_test.cpp LIBS ssim_analysis)
 ssim_add_unit_test(ssim_analysis_stoney_test SOURCES unit/analysis/stoney_test.cpp LIBS ssim_analysis ssim_hw)
