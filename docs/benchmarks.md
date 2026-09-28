@@ -160,6 +160,49 @@ about 8 to 30 ms). The ring is there because the design called for a swappable
 lock-free v2 with measured numbers, and it removes a mutex from the scan thread's
 push, not because the queue was a bottleneck.
 
+## Line coverage, SM10
+
+`llvm-cov`/`llvm-profdata` from Xcode Command Line Tools, against a separate
+Debug build instrumented with `-fprofile-instr-generate -fcoverage-mapping`
+(`build-cov/`, `SSIM_ENABLE_SECSGEM=ON`). All 461 non-soak tests were run once
+with `LLVM_PROFILE_FILE` set to one file per process, merged with
+`llvm-profdata merge -sparse`, then reported per module by passing that
+module's own `.cpp` files as `llvm-cov report`'s source arguments (not a
+filename regex — an earlier attempt at a negative-lookahead ignore-regex
+silently matched nothing, which would have been reported as coverage across
+every dependency; passing the real source list is unambiguous). The soak test
+(FT-SOAK-1) was excluded only for wall-clock budget; it exercises the same
+`MachineRuntime`/HSMS code the machine-runtime and scenario tests already
+cover, so its lines were not expected to add new ones. Merging profile data
+from 47 differently-linked test binaries prints "507 functions have mismatched
+data" — a known benign warning for header-only templates
+(`BoundedQueue<T>`, `SpscRingQueue<T>`, `Result<T>`, ...) instantiated
+differently across binaries; `llvm-cov` still attributes their executed lines
+correctly, it just cannot reconcile every instantiation's function-level
+counters against every other one.
+
+| Module | Lines | Missed | Line coverage | Target (SM10) |
+|---|---|---|---|---|
+| `ssim_core` | 1020 | 135 | **86.76%** | 80% — met |
+| `ssim_analysis` | 642 | 38 | **94.08%** | 80% — met |
+| `ssim_secsgem` | 2134 | 150 | **92.97%** | 80% — met |
+| `ssim_hw` (not in SM10's list, measured anyway) | 246 | 26 | 89.43% | — |
+| `src/machine/machine_runtime.cpp` (not in SM10's list, measured anyway) | 318 | 48 | 84.91% | — |
+
+Reproduce:
+
+```
+cmake -S . -B build-cov -DCMAKE_BUILD_TYPE=Debug -DSSIM_BUILD_TESTS=ON -DSSIM_ENABLE_SECSGEM=ON \
+  -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+  -DCMAKE_EXE_LINKER_FLAGS="-fprofile-instr-generate -fcoverage-mapping"
+cmake --build build-cov -j2
+mkdir -p build-cov/profraw
+LLVM_PROFILE_FILE="$PWD/build-cov/profraw/%p.profraw" ctest --test-dir build-cov -j2 -E Soak
+xcrun llvm-profdata merge -sparse build-cov/profraw/*.profraw -o build-cov/coverage.profdata
+xcrun llvm-cov report build-cov/tests/<one binary> -object build-cov/tests/<...next binary...> ... \
+  -instr-profile=build-cov/coverage.profdata src/core/*.cpp   # or src/analysis, src/secsgem
+```
+
 ## GUI responsiveness during a scan (FR-UI-3, NFR-PERF-4) — informal
 
 Test: `QtPanelSmoke` / `scanKeepsGuiResponsiveAndRateLimited`
