@@ -1053,35 +1053,40 @@ Public and third-party sources consulted for context (not proprietary):
 
 ## Appendix A. How to build, run and test (macOS)
 
-Names are placeholders until the code exists.
+The code exists now; these are the real commands (kept in sync with
+`README.md`'s quickstart — if the two ever disagree, that is a bug, fix
+both in the same change per CLAUDE.md §1).
 
 ```
 xcode-select --install
 brew install cmake qt
 
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$(brew --prefix qt)
-cmake --build build -j
+cmake --preset dev
+cmake --build build -j2
 ctest --test-dir build --output-on-failure
 
-# standalone machine, headless
-./build/equipment_cli --config config/default.json --out results
+# one wafer, standalone, headless
+./build/src/app_cli/equipment_cli --config config/default.json --rtf 0
 
 # machine with SECS/GEM, then the scripted host in a second terminal
-./build/equipment_cli --config config/default.json --port 5000
-./build/host_sim --connect 127.0.0.1:5000 --script scenarios/normal_run.scn
-
-# abuse test: garbage bytes must not stop the machine
-printf '\x00\x00\x00\x05garbage' | nc 127.0.0.1 5000
+./build/src/app_cli/equipment_cli serve --port 0 --control remote --rtf 0
+./build/src/host_sim/host_sim --connect 127.0.0.1:<port> --script scenarios/normal_run.scn
 
 # thread-safety build (separate build directory)
-cmake -S . -B build-tsan -DCMAKE_CXX_FLAGS="-fsanitize=thread -g" -DCMAKE_PREFIX_PATH=$(brew --prefix qt)
+cmake --preset tsan -DSSIM_ENABLE_SECSGEM=ON
 cmake --build build-tsan -j && ctest --test-dir build-tsan --output-on-failure
 
-# benchmarks and cross-check
-./build/bench_queue
-octave scripts/check_stress.m results/<run_id>/W042/samples.csv
+# benchmarks
+cmake -S . -B build-bench -DCMAKE_BUILD_TYPE=Release -DSSIM_BUILD_BENCH=ON -DSSIM_ENABLE_SECSGEM=ON
+cmake --build build-bench && build-bench/bench/bench_queue
 
-# containerised demo
+# Octave/MATLAB cross-check of a run's samples.csv (script exists;
+# TODO(habib): re-run once Octave is installed — see README's Results
+# section for why this has not been run in Octave itself yet)
+octave scripts/check_stress.m results/<run_id>/<wafer_id>/samples.csv
+
+# one-command local demo (starts the machine, runs a scenario, shuts down;
+# no Docker, per D-11)
 scripts/demo.sh
 ```
 
@@ -1095,10 +1100,12 @@ Rules:
 - Use the posting's own words in the skills section: multithreading, STL, data structures and algorithms, object-oriented programming, computer networks, operating systems, design patterns, Qt, MATLAB (only if run in MATLAB).
 - One page, one column, plain headings, text-based PDF or DOCX; repository and video links as plain text in the header.
 
-Draft bullets (fill after measuring):
+Bullets, filled from measurements in `docs/benchmarks.md` (Day 6). Numbers
+below are real; anything still bracketed needs Habib's input, not a guess —
+see the note after each such bullet.
 
-- Designed and implemented a multithreaded C++17 machine-control simulator for a wafer film-stress metrology tool (controller, scan, processing pool, HSMS I/O and logger threads); replaced a mutex queue with a lock-free ring buffer, raising sample throughput [X]x and cutting per-wafer analysis from [a] ms to [b] ms.
-- Integrated a SECS/GEM subset (HSMS session and timers, SECS-II codec, GEM communication and control states, events, alarms, remote commands) as an optional module; verified against an independent open-source host; [N] automated tests, ThreadSanitizer and AddressSanitizer clean.
-- Built a Qt 6 operator panel and a headless CLI on a shared core library; CI builds and tests on macOS; one-command local demo.
-- Validated film-stress computation (Stoney's equation) with known-answer tests within [x] percent under sensor noise and injected faults; cross-checked results with an Octave/MATLAB script.
-- Applied fuzzing and fault injection to the protocol stack ([N] mutated frames, zero crashes) and fixed [real bug description, if any].
+- Designed and implemented a multithreaded C++17 machine-control simulator for a wafer film-stress metrology tool (controller, scan, processing pool, HSMS I/O and logger threads); replaced a mutex queue with a lock-free ring buffer, raising 8-byte sample throughput 5.9x, and cut per-wafer analysis from 112.7 ms to 7.5-30 ms depending on thread count by rewriting the outlier filter and moving per-line filtering onto the pool.
+- Integrated a SECS/GEM subset (HSMS session and timers, SECS-II codec, GEM communication and control states, events, alarms, remote commands) as an optional module; verified against an independent open-source host (15/15 checks); 365 automated tests. `TODO(habib): confirm ThreadSanitizer/ASan+UBSan are green for the pushed v0.3 tag before this bullet claims "clean" — they were green as of v0.2's CI run but Day 6 added new threaded code (the lock-free ring, per-line pool filtering) not yet confirmed by a sanitizer run at the time this draft was written.`
+- Built a Qt 6 operator panel and a headless CLI on a shared core library; CI builds and tests on macOS; one-command local demo (`scripts/demo.sh`).
+- Validated film-stress computation (Stoney's equation) with known-answer tests within 2 percent of the hidden truth under sensor noise and injected faults; independently cross-checked the fit and Stoney formulas in Python against a real run (0.0100% difference). `TODO(habib): the "Octave/MATLAB" cross-check script (scripts/check_stress.m) exists but has not actually been run in Octave or MATLAB — Octave failed to install on the development machine. Do not write "Octave" or "MATLAB" into this bullet unless it is actually run before the CV is finalized.`
+- Applied fuzzing to the protocol stack (250,000 mutated frames across the SECS-II codec and the HSMS decoder/session, zero crashes or hangs) and a 1,000-wafer soak test with a churning host connection (zero deadlocks). `TODO(habib): "fixed [real bug description]" was in the original draft — the EventBus::unsubscribe race fixed on Day 2/3 (see CLAUDE.md's Day 2 commit "fix(core): EventBus::unsubscribe now waits for handlers that are already running") is the one concrete bug-and-regression-test story from this project; confirm with Habib whether to name it here or drop the clause.`
