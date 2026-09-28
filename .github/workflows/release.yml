@@ -1,0 +1,58 @@
+name: Release
+
+# PRD §12.2, Level 2 release: on a version tag, build the macOS Qt panel
+# (Release, arm64) and attach it to a GitHub Release. Unsigned — the README
+# explains how to open it. macOS on Apple Silicon is the only supported
+# platform (PRD D-11), so this is the only artifact.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos-app:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        run: brew install qt
+
+      - name: Configure (Release, Qt panel)
+        run: |
+          cmake -S . -B build-release \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSSIM_BUILD_TESTS=OFF \
+            -DSSIM_BUILD_QT=ON \
+            -DCMAKE_PREFIX_PATH=/opt/homebrew/opt/qtbase \
+            -DCMAKE_OSX_ARCHITECTURES=arm64
+
+      - name: Build
+        run: cmake --build build-release -j --target equipment_qt
+
+      - name: Bundle with macdeployqt
+        run: |
+          APP="$(find build-release -maxdepth 3 -name 'equipment_qt.app' -print -quit)"
+          if [ -z "$APP" ]; then
+            echo "release: equipment_qt.app not found under build-release" >&2
+            exit 1
+          fi
+          /opt/homebrew/opt/qt/bin/macdeployqt "$APP"
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent "$APP" "dist/StressScan-Sim-${GITHUB_REF_NAME}-macos-arm64.zip"
+
+      - name: Attach to the GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          body: |
+            Unsigned macOS (Apple Silicon) build of the Qt operator panel.
+            Gatekeeper will refuse to open it by right-click/double-click; the
+            README explains the one-time `xattr -cr` step needed for an
+            unsigned, unnotarized app. This is a portfolio simulator with no
+            real hardware and no SECS/GEM certification (see README's limits
+            section).
