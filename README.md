@@ -88,6 +88,13 @@ ctest --test-dir build --output-on-failure
 ./build/src/app_cli/equipment_cli --config config/default.json --rtf 0
 ```
 
+Timed for real from a genuinely fresh `git clone` (no cached dependencies,
+no prior build): configure 5m52s, build 2m29s, `ctest` (365 tests, including
+the 1,000-wafer soak test at ~90s) 2m13s &mdash; **10m34s total**, over this
+project's own 10-minute target. Configure dominates on a first run because
+it fetches nlohmann/json, Asio, GoogleTest and stb; a second `cmake --build`
+with those already fetched and cached is well under a minute.
+
 Qt panel (needs Qt 6, for example `brew install qtbase`; the preset assumes it
 is in `/opt/homebrew/opt/qtbase`, edit `CMakePresets.json` if yours differs):
 
