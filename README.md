@@ -12,9 +12,11 @@ No Frontier or SEMI names, logos or standard text anywhere in this repository.
 
 ## What it is
 
-A washing machine with an optional phone app: the machine scans alone, the app can start it remotely. The "clothes" are silicon wafers; the "cycle" is a laser scan that measures how much a thin film bends the wafer, turned into a stress number with Stoney's equation. A simulator invents noisy readings from a hidden "true" stress and the software has to recover it &mdash; so every error is measurable against a known answer.
+Control and analysis software for a cassette-to-cassette wafer film-stress metrology tool used in semiconductor fabs. It scans a wafer with a laser stage, fits the height profile per line, converts curvature to film stress with Stoney's equation, gates the result on quality, and reports it through a Qt operator panel, a headless CLI, or an optional SECS/GEM link so a factory host can drive it remotely &mdash; the same shape of software as the machine-control layer of a real fab tool. There is no physical hardware: a seeded simulator generates noisy sensor readings from a hidden "true" stress, so every recovered value can be checked against a known answer instead of trusted on faith.
 
-Build order: (1) standalone machine, (2) SECS/GEM as a separate module, (3) refactor and optimize with measured numbers.
+Built in multithreaded C++17: a controller thread owns machine state, a scan thread feeds a bounded lock-free queue, a processing pool runs the analysis pipeline, and the optional SECS/GEM module (HSMS/SECS-II/GEM subset, via standalone Asio) runs on its own I/O thread &mdash; all coordinated through an event bus, never shared mutable state. Qt 6 for the panel, CMake for the build, GoogleTest/ASan/UBSan/TSan/`llvm-cov` for verification, GitHub Actions for CI.
+
+Built as a portfolio project for a software engineer role in semiconductor equipment control: it demonstrates the concurrency, protocol-integration, measured-optimization and correctness-under-noise skills that role needs, backed by tests and numbers rather than claims. Build order: (1) standalone machine, (2) SECS/GEM as a separate module, (3) refactor and optimize with measured numbers.
 
 ## Architecture
 
