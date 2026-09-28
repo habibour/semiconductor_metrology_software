@@ -88,6 +88,17 @@ if(SSIM_ENABLE_SECSGEM)
     ssim_add_unit_test(ssim_hostsim_pattern_test SOURCES unit/host_sim/pattern_test.cpp LIBS ssim_hostsim)
     ssim_add_unit_test(ssim_hostsim_script_test SOURCES unit/host_sim/script_test.cpp LIBS ssim_hostsim)
 
+    # FT-SOAK-1 / NFR-REL-2: 1,000 wafers with a churning host link. Slow by
+    # design (real threads, real sockets, a thousand full runs), so it gets a
+    # generous TIMEOUT instead of the default (set directly on
+    # gtest_discover_tests, since set_tests_properties can't name a test
+    # before discovery has run).
+    add_executable(ssim_soak_test integration/soak_test.cpp)
+    target_link_libraries(ssim_soak_test PRIVATE GTest::gtest_main ssim_machine ssim_secsgem)
+    ssim_apply_warnings(ssim_soak_test)
+    ssim_apply_sanitizers(ssim_soak_test)
+    gtest_discover_tests(ssim_soak_test DISCOVERY_TIMEOUT 60 PROPERTIES TIMEOUT 300)
+
     # XT-SECSGEM-1 (FR-TOOL-2): an independent open-source host (the Python
     # `secsgem` library) talks to a real `equipment_cli serve`. Registered only
     # when the chosen Python can import secsgem, and it says so when it cannot,
