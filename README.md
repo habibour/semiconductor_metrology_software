@@ -12,11 +12,30 @@ No Frontier or SEMI names, logos or standard text anywhere in this repository.
 
 ## What it is
 
-Control and analysis software for a cassette-to-cassette wafer film-stress metrology tool used in semiconductor fabs. It scans a wafer with a laser stage, fits the height profile per line, converts curvature to film stress with Stoney's equation, gates the result on quality, and reports it through a Qt operator panel, a headless CLI, or an optional SECS/GEM link so a factory host can drive it remotely &mdash; the same shape of software as the machine-control layer of a real fab tool. There is no physical hardware: a seeded simulator generates noisy sensor readings from a hidden "true" stress, so every recovered value can be checked against a known answer instead of trusted on faith.
+Control and analysis software for a cassette-to-cassette wafer film-stress metrology tool &mdash; the kind of automated semiconductor equipment a fab uses to check whether a deposited film is pulling a wafer out of shape. There is no physical hardware: a seeded simulator generates noisy sensor readings from a hidden "true" stress value, so the software's job, and every number in this README, can be checked against a known answer instead of trusted on faith.
 
-Built in multithreaded C++17: a controller thread owns machine state, a scan thread feeds a bounded lock-free queue, a processing pool runs the analysis pipeline, and the optional SECS/GEM module (HSMS/SECS-II/GEM subset, via standalone Asio) runs on its own I/O thread &mdash; all coordinated through an event bus, never shared mutable state. Qt 6 for the panel, CMake for the build, GoogleTest/ASan/UBSan/TSan/`llvm-cov` for verification, GitHub Actions for CI.
+## What it does
 
-Built as a portfolio project for a software engineer role in semiconductor equipment control: it demonstrates the concurrency, protocol-integration, measured-optimization and correctness-under-noise skills that role needs, backed by tests and numbers rather than claims. Build order: (1) standalone machine, (2) SECS/GEM as a separate module, (3) refactor and optimize with measured numbers.
+- Scans a simulated wafer with a laser stage along several lines, at a configurable resolution and edge exclusion.
+- Fits each line's height profile, converts curvature to film stress with Stoney's equation, and gates the result on fit quality &mdash; a bad scan raises an alarm instead of reporting a number.
+- Reports through three interchangeable front ends: a Qt operator panel, a headless CLI, or an optional SECS/GEM link so a factory host computer can start scans and receive results and alarms remotely.
+- Keeps working with the SECS/GEM link entirely disabled &mdash; it is a separable module, not a requirement to operate the machine.
+
+## How it works
+
+Built in multithreaded C++17, the same shape of software as the machine-control layer of a real fab tool: a controller thread owns all machine state, a scan thread feeds a bounded lock-free queue, a processing pool runs the analysis pipeline (edge exclusion, outlier rejection, curve fit, Stoney's equation, quality gates), and the optional SECS/GEM module (HSMS session and timers, a SECS-II codec, GEM states/events/alarms/remote commands, over standalone Asio) runs on its own I/O thread. Every thread talks to the others only through a single event bus &mdash; there is no shared mutable state.
+
+## Tech stack
+
+C++17 &middot; Qt 6 (operator panel) &middot; standalone Asio (SECS/GEM networking) &middot; CMake (build) &middot; GoogleTest (365 tests) &middot; ThreadSanitizer / AddressSanitizer / UBSan (concurrency and memory safety) &middot; `llvm-cov` (coverage) &middot; GitHub Actions (CI) &middot; Python (`secsgem`, for the independent interop check)
+
+## Impact and who it's for
+
+This is a portfolio project, not a deployed product, built for a hiring engineer evaluating a fresh graduate's ability to write real equipment-control software &mdash; it demonstrates the concurrency, protocol-integration, and correctness-under-noise skills that role needs, backed by tests and measured numbers rather than claims.
+
+More broadly, the pattern it follows is a real one: a team writing factory-host software needs something to test against before real equipment is available or affordable, and a well-tested emulator like this one, SECS/GEM link included, is exactly that kind of tool on an actual fab-automation team.
+
+Build order: (1) standalone machine, (2) SECS/GEM as a separate module, (3) refactor and optimize with measured numbers.
 
 ## Architecture
 
