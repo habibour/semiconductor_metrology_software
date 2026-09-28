@@ -41,7 +41,16 @@ jobs:
             echo "release: equipment_qt.app not found under build-release" >&2
             exit 1
           fi
-          /opt/homebrew/opt/qt/bin/macdeployqt "$APP"
+          # Resolve macdeployqt from PATH first (brew symlinks it into
+          # /opt/homebrew/bin on Apple Silicon runners); a hardcoded
+          # /opt/homebrew/opt/qt/bin/... path does not exist on every Homebrew
+          # layout, which is what broke this step the first time.
+          MACDEPLOYQT="$(command -v macdeployqt || echo "$(brew --prefix qt)/bin/macdeployqt")"
+          if [ ! -x "$MACDEPLOYQT" ]; then
+            echo "release: macdeployqt not found (tried PATH and \$(brew --prefix qt)/bin)" >&2
+            exit 1
+          fi
+          "$MACDEPLOYQT" "$APP"
           mkdir -p dist
           ditto -c -k --sequesterRsrc --keepParent "$APP" "dist/StressScan-Sim-${GITHUB_REF_NAME}-macos-arm64.zip"
 
