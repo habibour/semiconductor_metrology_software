@@ -160,7 +160,23 @@ private Q_SLOTS:
         w.mode_combo()->setCurrentIndex(2);
         Q_EMIT w.mode_combo()->activated(2);
         QTRY_VERIFY_WITH_TIMEOUT(!w.start_button()->isEnabled(), 5000);
-        recorder.hold(2600);
+        recorder.hold(2200);
+
+        recorder.set_caption(
+            QStringLiteral("Back to Online-Local: the operator is in charge again"));
+        w.mode_combo()->setCurrentIndex(1);
+        Q_EMIT w.mode_combo()->activated(1);
+        QTRY_VERIFY_WITH_TIMEOUT(w.start_button()->isEnabled(), 5000);
+        recorder.hold(1600);
+
+        recorder.set_caption(QStringLiteral("Start a scan, then Abort partway through"));
+        QTest::mouseClick(w.start_button(), Qt::LeftButton);
+        QTRY_VERIFY_WITH_TIMEOUT(w.abort_button()->isEnabled(), 5000);
+        recorder.hold(900);
+        QTest::mouseClick(w.abort_button(), Qt::LeftButton);
+        QTRY_VERIFY_WITH_TIMEOUT(process->text() == QStringLiteral("Process: Idle"), 10000);
+        recorder.set_caption(QStringLiteral("Aborted: back to Idle, no result reported"));
+        recorder.hold(2200);
 
         qInfo() << "recorded" << recorder.frames() << "frames";
         QVERIFY(recorder.frames() > 40);

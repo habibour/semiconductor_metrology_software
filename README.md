@@ -98,11 +98,11 @@ Script language: `docs/scenario-format.md`. `-DSSIM_INTEROP_PYTHON=<python with 
 
 ## Demo
 
-![Operator panel: a scan, an alarm, clearing it, and Online-Remote](docs/media/panel_demo.gif)
+![Operator panel: a scan, an alarm, clearing it, Online-Remote and back, then an Abort](docs/media/panel_demo.gif)
 
-W001 scans cleanly (stress -180.0 MPa recovered), W002 raises and clears a sensor alarm, Online-Remote disables operator Start. **Not a screen recording** &mdash; real panel widgets rendered offscreen and driven by a script (`scripts/make_demo_gif.sh`). Day 6 was backend-only, so this GIF is still accurate as of `v0.3`.
+[**Watch the full functionality video**](docs/media/panel_demo.mp4) (31s, same session, higher quality than the GIF above): W001 scans cleanly (stress -180.0 MPa recovered, wafer map shown); W002 raises a sensor alarm and Start stays locked until Clear alarm; switching to Online-Remote disables operator Start, switching back to Online-Local re-enables it; a scan is started and then Aborted partway through, returning to Idle with no result reported. **Not a screen recording** &mdash; real panel widgets rendered offscreen and driven by a script (`tests/unit/app_qt/panel_smoke_test.cpp`'s `demoFrames`, assembled by `scripts/make_demo_gif.sh`), so it is exactly what the real widgets draw, deterministic and reproducible on every machine.
 
-**Video:** a two-minute walkthrough is linked here once recorded.
+**Narrated walkthrough video:** a separate two-minute screen recording (with the CI badges above and a live host connection) is linked here once recorded.
 
 **One command:** `scripts/demo.sh` builds if needed, starts the machine, runs a scenario via `host_sim`, prints the trace, leaves results on disk, shuts down. No Docker (PRD D-11).
 
