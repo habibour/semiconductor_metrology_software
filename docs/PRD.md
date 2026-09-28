@@ -962,16 +962,16 @@ Parallel CV tasks (small, daily): rewrite the internship bullets against the job
 | STL | Whole core | Containers, algorithms, smart pointers |
 | Excellent data structures and algorithms | Queues (mutex and lock-free ring), scheduler, least-squares fit, median and MAD, polar interpolation | Unit tests and complexity notes |
 | C++ Qt | FR-UI | Panel, demo GIF |
-| C# WinForm/WPF | FR-HOST-4 (C# host), FR-HOST-5 (WPF, Windows only) | Claim only what is built |
+| C# WinForm/WPF | FR-HOST-4 (C# host), FR-HOST-5 (WPF, Windows only) | Not built, no claim &mdash; Tier 2/3, cut per the PRD's own priority order (no Windows access, D-11) |
 | Visual Studio and MFC | Not planned; no MSVC or Windows build | No claim of MFC |
 | Data communications and computer networks | FR-HSMS, FR-S2, FR-HW-7 (framing and CRC), NFR-SEC-1 | Protocol code, traces, fuzz tests |
 | Operating systems | 6.3, 6.4, FR-MC-6 | Thread model, shutdown protocol, sanitizer results |
 | Design patterns | 6.6 | Patterns table and code |
-| Competitive programming and problem solving | Algorithms above; CV line | Profile link if available |
-| MATLAB (plus) | FR-TOOL-1 | Script in the repository; claim only if run in MATLAB |
+| Competitive programming and problem solving | Algorithms above; CV line | Algorithms: evidenced by the code. Profile link: pending Q7/16.3 (Habib's call, only if true) |
+| MATLAB (plus) | FR-TOOL-1 | Script in the repository (`scripts/check_stress.m`), NOT run in MATLAB or Octave &mdash; Octave failed to install (see README's Known limitations); formulas cross-checked independently in Python instead (0.0100% difference from the machine's own answer) |
 | Research-based work and learning new technology | Physics validation, learning SECS/GEM in days, thesis on the CV | README notes; thesis line |
 | Fluent English | README, docs, video narration | Writing quality |
-| Willing to travel | CV statement | Only if true |
+| Willing to travel | CV statement | Pending Q7/16.3 (Habib's call, only if true) |
 
 ---
 
